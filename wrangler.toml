@@ -19,6 +19,12 @@ bucket = "public"
 include = ["*.html", "*.js", "*.css", "*.svg", "*.png", "*.jpg", "*.gif", "*.json", "*.woff", "*.woff2", "*.ttf"]
 exclude = ["node_modules"]
 
+# === KV Namespace Binding (must be explicit when using [site]) ===
+[[kv_namespaces]]
+binding = "__STATIC_CONTENT"
+id = "3d323d87029142ffb6359d7d693b118b"
+preview_id = "3d323d87029142ffb6359d7d693b118b"
+
 # === Performance & Caching ===
 [limits]
 cpu_seconds = 30
