@@ -1,5 +1,4 @@
-// Import the static content manifest that Wrangler automatically creates
-import { getAssetFromKV, mapRequestToAsset } from '@cloudflare/kv-asset-handler'
+// No imports needed - using modern env.ASSETS binding
 
 // Cloudflare Access JWT validation
 async function validateAccessJWT(request, env) {
@@ -7,8 +6,6 @@ async function validateAccessJWT(request, env) {
 
   const AUD = env.CLOUDFLARE_ACCESS_AUD || 'f189d9a0e6304c25e2e58f56d530cfb3a4a38ac803608d17c9d39453d6c0beea'
   const JWKS_URL = env.CLOUDFLARE_ACCESS_JWKS_URL || 'https://maratkurbanov.cloudflareaccess.com/cdn-cgi/access/certs'
-
-  console.log('🔐 JWT Validation:', { tokenPresent: !!token })
 
   if (!token) {
     return { valid: false, error: 'Missing Access JWT' }
@@ -48,10 +45,8 @@ async function validateAccessJWT(request, env) {
     const nowSeconds = Math.floor(Date.now() / 1000)
     if (payload.exp < nowSeconds) throw new Error('Token expired')
 
-    console.log('✓ JWT valid:', payload.email)
     return { valid: true, email: payload.email }
   } catch (error) {
-    console.error('❌ JWT validation failed:', error.message)
     return { valid: false, error: error.message }
   }
 }
@@ -60,8 +55,6 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url)
     const pathname = url.pathname
-
-    console.log(`📨 ${request.method} ${pathname}`)
 
     // Health check
     if (pathname === '/health') {
@@ -80,92 +73,27 @@ export default {
           { status: 401, headers: { 'Content-Type': 'application/json' } }
         )
       }
-
-      console.log(`👤 Authenticated: ${accessValidation.email}`)
-    } else {
-      console.log('⚠️  Localhost - Auth skipped')
     }
 
-    // Serve static assets from KV using the manifest
-    try {
-      console.log('📦 Serving from KV...')
-      if (!env.__STATIC_CONTENT) {
-        throw new Error('KV binding __STATIC_CONTENT is not available')
-      }
+    // Serve static assets using modern env.ASSETS binding
+    let response = await env.ASSETS.fetch(request)
 
-      // Test if the binding has KV methods
-      if (typeof env.__STATIC_CONTENT.get !== 'function') {
-        console.error('❌ KV binding missing .get() method. Type:', typeof env.__STATIC_CONTENT)
-        throw new Error('KV binding is not a valid KV namespace')
-      }
-
-      // Map request to asset (handles SPA routing)
-      const mappedRequest = mapRequestToAsset(request)
-      console.log('📍 Serving:', new URL(mappedRequest.url).pathname)
-
-      // Get asset from KV (uses __STATIC_CONTENT by default)
-      const response = await getAssetFromKV(
-        {
-          request: mappedRequest,
-          waitUntil: ctx.waitUntil.bind(ctx),
-          env,
-        },
-        {
-          cacheControl: {
-            default: '1h',
-            'max-age': 3600,
-          },
-        }
-      )
-
-      // Set cache headers for HTML files
-      if (pathname.endsWith('.html') || pathname === '/') {
-        const newHeaders = new Headers(response.headers)
-        newHeaders.set('Cache-Control', 'public, max-age=0, must-revalidate')
-        return new Response(response.body, {
-          status: response.status,
-          statusText: response.statusText,
-          headers: newHeaders,
-        })
-      }
-
-      return response
-    } catch (error) {
-      console.error('❌ Asset error:', error.message)
-
-      // For SPA: if asset not found, serve index.html
-      if (pathname !== '/') {
-        try {
-          console.log('📍 Fallback: Serving index.html')
-          const indexRequest = mapRequestToAsset(new Request(`${url.origin}/index.html`, request))
-          return await getAssetFromKV(
-            {
-              request: indexRequest,
-              waitUntil: ctx.waitUntil.bind(ctx),
-              env,
-            },
-            {
-              cacheControl: {
-                default: '1h',
-              },
-            }
-          )
-        } catch (fallbackError) {
-          console.error('❌ Fallback failed:', fallbackError.message)
-        }
-      }
-
-      return new Response(
-        JSON.stringify({
-          error: 'Not found',
-          message: error.message,
-          path: pathname,
-        }, null, 2),
-        {
-          status: 404,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      )
+    // For SPA: if asset not found and not a root path, try index.html
+    if (response.status === 404 && pathname !== '/' && !pathname.startsWith('/api')) {
+      response = await env.ASSETS.fetch(new Request(`${url.origin}/index.html`, request))
     }
+
+    // Set cache headers for HTML files
+    if (pathname.endsWith('.html') || pathname === '/') {
+      const newHeaders = new Headers(response.headers)
+      newHeaders.set('Cache-Control', 'public, max-age=0, must-revalidate')
+      return new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: newHeaders,
+      })
+    }
+
+    return response
   },
 }
