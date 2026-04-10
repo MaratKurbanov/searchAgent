@@ -10,6 +10,12 @@ compatibility_flags = ["nodejs_compat"]
 # === Cloudflare Access (base configuration - inherited by all environments) ===
 vars = { CLOUDFLARE_ACCESS_AUD = "f189d9a0e6304c25e2e58f56d530cfb3a4a38ac803608d17c9d39453d6c0beea", CLOUDFLARE_ACCESS_JWKS_URL = "https://maratkurbanov.cloudflareaccess.com/cdn-cgi/access/certs" }
 
+# === KV Namespace Binding for Static Assets ===
+[[kv_namespaces]]
+binding = "__STATIC_CONTENT"
+id = "3d323d87029142ffb6359d7d693b118b"
+preview_id = "3d323d87029142ffb6359d7d693b118b"
+
 # === Build Configuration ===
 [build]
 command = "npm run build"
