@@ -62,6 +62,7 @@ export default {
     const pathname = url.pathname
 
     console.log(`📨 ${request.method} ${pathname}`)
+    console.log('🔍 Available bindings:', Object.keys(env).filter(k => k.startsWith('_')))
 
     // Health check
     if (pathname === '/health') {
@@ -99,14 +100,14 @@ export default {
         {
           request: mappedRequest,
           waitUntil: ctx.waitUntil.bind(ctx),
+          env,
         },
         {
           cacheControl: {
             default: '1h',
             'max-age': 3600,
           },
-        },
-        env
+        }
       )
 
       // Set cache headers for HTML files
@@ -133,13 +134,13 @@ export default {
             {
               request: indexRequest,
               waitUntil: ctx.waitUntil.bind(ctx),
+              env,
             },
             {
               cacheControl: {
                 default: '1h',
               },
-            },
-            env
+            }
           )
         } catch (fallbackError) {
           console.error('❌ Fallback failed:', fallbackError.message)
