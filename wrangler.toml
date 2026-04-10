@@ -1,26 +1,87 @@
+# Cloudflare Workers Configuration - Search Agent
+# Consistent settings across all deployments
+
+# === Base Configuration (shared across all environments) ===
 name = "search-agent"
 main = "src/worker.js"
 compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
 
-# Serve static files from the public directory
-[site]
-bucket = "public"
-include = ["*.html", "*.js", "*.css", "*.svg", "*.png", "*.jpg", "*.gif", "*.json"]
-exclude = ["node_modules"]
-
+# === Build Configuration ===
 [build]
 command = "npm run build"
 cwd = "."
 watch_paths = ["src/**/*.{js,jsx,css}"]
 
-[[routes]]
-pattern = "*"
-zone_name = "example.com"
+# === Static Site Configuration ===
+[site]
+bucket = "public"
+include = ["*.html", "*.js", "*.css", "*.svg", "*.png", "*.jpg", "*.gif", "*.json", "*.woff", "*.woff2", "*.ttf"]
+exclude = ["node_modules"]
 
+# === Performance & Caching ===
+[limits]
+cpu_seconds = 30
+
+# === Observability (Base - applied to all environments) ===
+[observability]
+enabled = false
+head_sampling_rate = 1
+
+[observability.logs]
+enabled = true
+head_sampling_rate = 1
+persist = true
+invocation_logs = true
+
+[observability.traces]
+enabled = false
+persist = true
+head_sampling_rate = 1
+
+# === Development Environment ===
+[env.development]
+name = "search-agent-dev"
+route = "http://localhost:8787/*"
+
+[env.development.env]
+ENVIRONMENT = "development"
+LOG_LEVEL = "debug"
+
+[env.development.observability.logs]
+enabled = true
+persist = true
+invocation_logs = true
+
+# === Staging Environment ===
+[env.staging]
+name = "search-agent-staging"
+route = "https://staging.example.com/*"
+
+[env.staging.env]
+ENVIRONMENT = "staging"
+LOG_LEVEL = "info"
+
+[env.staging.observability.logs]
+enabled = true
+persist = true
+invocation_logs = true
+
+# === Production Environment ===
 [env.production]
 name = "search-agent-prod"
 route = "https://example.com/*"
 
-[env.development]
-name = "search-agent-dev"
-route = "http://localhost:8787/*"
+[env.production.env]
+ENVIRONMENT = "production"
+LOG_LEVEL = "warn"
+
+[env.production.observability.logs]
+enabled = true
+persist = true
+invocation_logs = true
+
+[env.production.observability.traces]
+enabled = false
+persist = true
+head_sampling_rate = 1

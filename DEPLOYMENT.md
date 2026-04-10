@@ -26,7 +26,44 @@ npx wrangler login
 
 This will open a browser window to authenticate and create an API token.
 
-## Step 3: Configure wrangler.toml
+## Step 3: Environment Configuration
+
+The `wrangler.toml` has three environments configured for consistency:
+
+### Development (Local Testing)
+```bash
+npm run worker:dev
+```
+- **Name**: `search-agent-dev`
+- **URL**: `http://localhost:8787`
+- **Log Level**: `debug`
+- **Features**: Full logging enabled
+
+### Staging (Pre-production Testing)
+```bash
+wrangler deploy --env staging
+```
+- **Name**: `search-agent-staging`
+- **URL**: `https://staging.example.com`
+- **Log Level**: `info`
+- **Features**: Logging enabled
+
+### Production (Live)
+```bash
+npm run worker:deploy
+```
+- **Name**: `search-agent-prod`
+- **URL**: `https://example.com`
+- **Log Level**: `warn`
+- **Features**: Logging enabled for errors only
+
+All environments share:
+- Same build process (Vite)
+- Same observability settings
+- Same static file serving
+- Same Worker code
+
+## Step 4: Configure wrangler.toml
 
 Edit `wrangler.toml` and update:
 
@@ -73,21 +110,32 @@ Access at: `http://localhost:8787`
 
 ## Step 6: Deploy
 
+### Deployment Commands by Environment
+
+**Development (local):**
+```bash
+npm run worker:dev
+```
+
+**Staging (preview before production):**
+```bash
+wrangler deploy --env staging
+```
+
+**Production:**
+```bash
+npm run worker:deploy
+# or explicitly:
+wrangler deploy --env production
+```
+
 ### Dry Run (preview without deploying)
 
 ```bash
 npm run worker:build
 ```
 
-This builds the app and shows what will be deployed.
-
-### Deploy to Production
-
-```bash
-npm run worker:deploy
-```
-
-Once deployed, your app will be live!
+This builds the app and shows what will be deployed without pushing to production.
 
 ## Verification
 
@@ -108,6 +156,48 @@ wrangler tail
 ```
 
 This streams real-time logs from your Worker.
+
+## Deployment Consistency
+
+### Shared Configuration (All Environments)
+
+The following settings are **identical across all deployments**:
+
+- **Build Process**: `npm run build` (Vite)
+- **Static Files**: Served from `public/` directory
+- **Worker Code**: `src/worker.js` (same for all envs)
+- **Compatibility Date**: `2024-01-01`
+- **Observability**: Logging enabled, traces disabled
+- **Performance Limit**: 30 second CPU timeout
+
+### Environment-Specific Configuration
+
+| Setting | Development | Staging | Production |
+|---------|-------------|---------|------------|
+| **Name** | search-agent-dev | search-agent-staging | search-agent-prod |
+| **URL** | localhost:8787 | staging.example.com | example.com |
+| **Log Level** | debug | info | warn |
+| **Invocation Logs** | ✅ | ✅ | ✅ |
+
+### Consistency Checklist
+
+- [ ] All environments use same build command
+- [ ] All environments serve from same `public/` folder
+- [ ] All environments have observability enabled
+- [ ] Environment variables are set per-environment
+- [ ] Log levels match intended environment
+- [ ] Routes point to correct domains
+
+## Deployment Checklist
+
+- [ ] Update all domains in `wrangler.toml` (dev, staging, prod)
+- [ ] Verify log levels match environment intent
+- [ ] Run `npm run worker:build` for dry run
+- [ ] Review deployment preview
+- [ ] Deploy to staging first: `wrangler deploy --env staging`
+- [ ] Test staging deployment thoroughly
+- [ ] Deploy to production: `npm run worker:deploy`
+- [ ] Verify production deployment with `wrangler tail`
 
 ## Rollback
 
