@@ -144,6 +144,7 @@ export default {
             default: '1h',
             'max-age': 3600,
           },
+          ASSET_NAMESPACE: env.ASSETS,
         }
       )
 
