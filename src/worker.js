@@ -89,16 +89,25 @@ async function validateAccessJWT(request, env) {
       exp: payload.exp,
     })
 
-    // Validate audience
+    // Validate audience (handle comma-separated audiences)
     console.log('Audience validation:')
     console.log('  Expected (AUD):', AUD)
     console.log('  Got (payload.aud):', payload.aud)
-    console.log('  Match:', payload.aud === AUD)
 
-    if (payload.aud !== AUD) {
+    // Check if our audience is in the list (Cloudflare may send multiple audiences)
+    const audiences = typeof payload.aud === 'string'
+      ? payload.aud.split(',').map(a => a.trim())
+      : Array.isArray(payload.aud)
+      ? payload.aud
+      : [payload.aud]
+
+    console.log('  Audiences array:', audiences)
+    const audMatch = audiences.includes(AUD)
+    console.log('  Match found:', audMatch)
+
+    if (!audMatch) {
       console.log('ERROR: Audience mismatch!')
-      console.log('The JWT was issued with a different audience ID')
-      console.log('You need to update CLOUDFLARE_ACCESS_AUD in wrangler.toml to:', payload.aud)
+      console.log('Expected audience not found in JWT audiences')
       throw new Error(`Invalid audience. Expected: ${AUD}, Got: ${payload.aud}`)
     }
 
