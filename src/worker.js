@@ -62,7 +62,6 @@ export default {
     const pathname = url.pathname
 
     console.log(`📨 ${request.method} ${pathname}`)
-    console.log('🔍 Available bindings:', Object.keys(env).filter(k => k.startsWith('_')))
 
     // Health check
     if (pathname === '/health') {
@@ -90,6 +89,12 @@ export default {
     // Serve static assets from KV using the manifest
     try {
       console.log('📦 Serving from KV...')
+      console.log('🔍 KV Binding Check:', {
+        hasStaticContent: !!env.__STATIC_CONTENT,
+        bindingType: typeof env.__STATIC_CONTENT,
+        bindingKeys: env.__STATIC_CONTENT ? Object.keys(env.__STATIC_CONTENT) : null,
+        envKeys: Object.keys(env)
+      })
 
       // Map request to asset (handles SPA routing)
       const mappedRequest = mapRequestToAsset(request)
