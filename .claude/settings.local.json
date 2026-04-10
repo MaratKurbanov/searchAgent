@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm info:*)",
+      "Bash(npm pack:*)",
+      "Bash(curl -s https://registry.npmjs.org/@cloudflare/ai-search-snippet/0.0.30)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(''''exports:'''', json.dumps\\(d.get\\(''''exports'''',''''''''\\), indent=2\\)\\); print\\(''''main:'''', d.get\\(''''main'''',''''''''\\)\\); print\\(''''module:'''', d.get\\(''''module'''',''''''''\\)\\); print\\(''''types:'''', d.get\\(''''types'''',''''''''\\)\\); print\\(''''files:'''', d.get\\(''''files'''',''''''''\\)\\)\")",
+      "Read(//private/tmp/**)",
+      "Bash(curl -s https://registry.npmjs.org/@cloudflare/ai-search-snippet/-/ai-search-snippet-0.0.30.tgz)",
+      "Bash(tar -xz --wildcards '*/main.d.ts')",
+      "Read(//tmp/package/dist/**)",
+      "Bash(curl -s -L https://registry.npmjs.org/@cloudflare/ai-search-snippet/-/ai-search-snippet-0.0.30.tgz -o ai-search-snippet.tgz)",
+      "Bash(tar -xf ai-search-snippet.tgz)",
+      "Bash(curl -s https://raw.githubusercontent.com/cloudflare/ai-search-snippet/refs/heads/main/README.md)",
+      "Bash(npm create:*)",
+      "Bash(npm init:*)",
+      "Bash(mv vite-project/* .)",
+      "Bash(mv vite-project/.* .)",
+      "Bash(npm install:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(npm run:*)",
+      "Bash(ls:*)"
+    ]
+  }
+}
