@@ -4,10 +4,18 @@ import { getAssetFromKV, mapRequestToAsset } from '@cloudflare/kv-asset-handler'
 async function validateAccessJWT(request, env) {
   const token = request.headers.get('Cf-Access-Jwt-Assertion')
 
+  // Fallback values (hardcoded for debugging)
+  const AUD = env.CLOUDFLARE_ACCESS_AUD || 'f189d9a0e6304c25e2e58f56d530cfb3a4a38ac803608d17c9d39453d6c0beea'
+  const JWKS_URL = env.CLOUDFLARE_ACCESS_JWKS_URL || 'https://maratkurbanov.cloudflareaccess.com/cdn-cgi/access/certs'
+
   console.log('=== Cloudflare Access JWT Validation Debug ===')
   console.log('Token present:', !!token)
-  console.log('Environment AUD:', env.CLOUDFLARE_ACCESS_AUD)
-  console.log('Environment JWKS URL:', env.CLOUDFLARE_ACCESS_JWKS_URL)
+  console.log('Token length:', token?.length)
+  console.log('AUD (from env):', env.CLOUDFLARE_ACCESS_AUD)
+  console.log('AUD (fallback):', AUD)
+  console.log('JWKS_URL (from env):', env.CLOUDFLARE_ACCESS_JWKS_URL)
+  console.log('JWKS_URL (fallback):', JWKS_URL)
+  console.log('Environment keys:', Object.keys(env).filter(k => k.includes('ACCESS') || k.includes('CLOUDFLARE')))
 
   if (!token) {
     console.log('ERROR: No Cf-Access-Jwt-Assertion header found')
@@ -16,19 +24,19 @@ async function validateAccessJWT(request, env) {
       error: 'Missing Access JWT - ensure Access is enabled for this domain',
       debug: {
         headerPresent: false,
-        availableHeaders: Array.from(request.headers.entries()).map(([k]) => k),
       },
     }
   }
 
   try {
     console.log('Token received, attempting validation...')
+    console.log('Using JWKS URL:', JWKS_URL)
 
     // Fetch the public keys from Cloudflare
-    console.log('Fetching JWKs from:', env.CLOUDFLARE_ACCESS_JWKS_URL)
-    const jwksResponse = await fetch(env.CLOUDFLARE_ACCESS_JWKS_URL)
+    const jwksResponse = await fetch(JWKS_URL)
 
     if (!jwksResponse.ok) {
+      console.error(`JWKs fetch failed: ${jwksResponse.status} ${jwksResponse.statusText}`)
       throw new Error(`Failed to fetch JWKs: ${jwksResponse.status} ${jwksResponse.statusText}`)
     }
 
@@ -79,20 +87,19 @@ async function validateAccessJWT(request, env) {
       sub: payload.sub,
       aud: payload.aud,
       exp: payload.exp,
-      iat: payload.iat,
     })
 
     // Validate audience
-    if (payload.aud !== env.CLOUDFLARE_ACCESS_AUD) {
+    if (payload.aud !== AUD) {
       console.log('ERROR: Audience mismatch')
-      console.log('Expected:', env.CLOUDFLARE_ACCESS_AUD)
+      console.log('Expected:', AUD)
       console.log('Got:', payload.aud)
       throw new Error('Invalid audience')
     }
 
     // Validate expiration
     const nowSeconds = Math.floor(Date.now() / 1000)
-    console.log('Checking expiration: exp=' + payload.exp + ', now=' + nowSeconds)
+    console.log('Token expiration check: exp=' + payload.exp + ', now=' + nowSeconds)
 
     if (payload.exp < nowSeconds) {
       console.log('ERROR: Token expired')
@@ -107,13 +114,15 @@ async function validateAccessJWT(request, env) {
     }
   } catch (error) {
     console.error('JWT validation error:', error.message)
-    console.error('Error stack:', error.stack)
+    console.error('Error type:', error.constructor.name)
+    if (error.stack) console.error('Stack:', error.stack)
     return {
       valid: false,
       error: error.message,
       debug: {
         tokenPresent: !!token,
         tokenLength: token?.length,
+        errorType: error.constructor.name,
       },
     }
   }
