@@ -90,11 +90,16 @@ async function validateAccessJWT(request, env) {
     })
 
     // Validate audience
+    console.log('Audience validation:')
+    console.log('  Expected (AUD):', AUD)
+    console.log('  Got (payload.aud):', payload.aud)
+    console.log('  Match:', payload.aud === AUD)
+
     if (payload.aud !== AUD) {
-      console.log('ERROR: Audience mismatch')
-      console.log('Expected:', AUD)
-      console.log('Got:', payload.aud)
-      throw new Error('Invalid audience')
+      console.log('ERROR: Audience mismatch!')
+      console.log('The JWT was issued with a different audience ID')
+      console.log('You need to update CLOUDFLARE_ACCESS_AUD in wrangler.toml to:', payload.aud)
+      throw new Error(`Invalid audience. Expected: ${AUD}, Got: ${payload.aud}`)
     }
 
     // Validate expiration
@@ -141,8 +146,17 @@ export default {
       return new Response('OK', { status: 200 })
     }
 
-    // Validate Cloudflare Access JWT
-    const accessValidation = await validateAccessJWT(request, env)
+    // Skip Access validation for local development (localhost)
+    const isLocalhost = url.hostname === 'localhost' || url.hostname === '127.0.0.1'
+
+    if (isLocalhost) {
+      console.log('⚠️  Local development mode - Access validation skipped')
+    }
+
+    // Validate Cloudflare Access JWT (skip for localhost)
+    const accessValidation = isLocalhost
+      ? { valid: true, user: 'localhost-dev', email: 'dev@localhost' }
+      : await validateAccessJWT(request, env)
 
     if (!accessValidation.valid) {
       console.log('Access validation failed:', accessValidation.error)
