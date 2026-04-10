@@ -10,7 +10,12 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+public
 *.local
+
+# Cloudflare Workers
+.wrangler/
+wrangler.env
 
 # Editor directories and files
 .vscode/*

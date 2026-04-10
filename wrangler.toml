@@ -1,0 +1,26 @@
+name = "cloudflare-ai-search"
+main = "src/worker.js"
+compatibility_date = "2024-01-01"
+
+# Serve static files from the public directory
+[site]
+bucket = "public"
+include = ["*.html", "*.js", "*.css", "*.svg", "*.png", "*.jpg", "*.gif", "*.json"]
+exclude = ["node_modules"]
+
+[build]
+command = "npm run build"
+cwd = "."
+watch_paths = ["src/**/*.{js,jsx,css}"]
+
+[[routes]]
+pattern = "*"
+zone_name = "example.com"
+
+[env.production]
+name = "cloudflare-ai-search-prod"
+route = "https://example.com/*"
+
+[env.development]
+name = "cloudflare-ai-search-dev"
+route = "http://localhost:8787/*"
