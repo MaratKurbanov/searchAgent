@@ -133,7 +133,7 @@ export default {
       const mappedRequest = mapRequestToAsset(request)
       console.log('📍 Mapped path:', new URL(mappedRequest.url).pathname)
 
-      // Get from KV
+      // Get from KV (Wrangler automatically provides __STATIC_CONTENT for [site] config)
       const response = await getAssetFromKV(
         {
           request: mappedRequest,
@@ -144,7 +144,6 @@ export default {
             default: '1h',
             'max-age': 3600,
           },
-          ASSET_NAMESPACE: env.ASSETS,
         }
       )
 
