@@ -1,3 +1,5 @@
+import { getAssetFromKV, mapRequestToAsset } from '@cloudflare/kv-asset-handler'
+
 // Cloudflare Access JWT validation with debugging
 async function validateAccessJWT(request, env) {
   const token = request.headers.get('Cf-Access-Jwt-Assertion')
@@ -6,14 +8,9 @@ async function validateAccessJWT(request, env) {
   console.log('Token present:', !!token)
   console.log('Environment AUD:', env.CLOUDFLARE_ACCESS_AUD)
   console.log('Environment JWKS URL:', env.CLOUDFLARE_ACCESS_JWKS_URL)
-  console.log('Request headers:', {
-    'cf-access-jwt-assertion': !!token,
-    'cf-access-authenticated-user-email': request.headers.get('Cf-Access-Authenticated-User-Email'),
-  })
 
   if (!token) {
     console.log('ERROR: No Cf-Access-Jwt-Assertion header found')
-    console.log('Available headers:', Array.from(request.headers.entries()))
     return {
       valid: false,
       error: 'Missing Access JWT - ensure Access is enabled for this domain',
@@ -68,7 +65,7 @@ async function validateAccessJWT(request, env) {
 
     console.log('Key found, decoding payload...')
 
-    // Verify the JWT (simplified - uses built-in crypto)
+    // Decode payload
     const payload = JSON.parse(
       new TextDecoder().decode(
         Uint8Array.from(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')), c =>
@@ -157,26 +154,45 @@ export default {
 
     console.log(`Access granted for user: ${accessValidation.email}`)
 
-    // Add user info to request headers for logging
+    // Add user info to request headers
     const headers = new Headers(request.headers)
     headers.set('X-Access-User', accessValidation.email || accessValidation.user)
 
-    // Handle SPA routing - Wrangler serves static files automatically
-    if (
-      pathname.includes('.') ||
-      pathname.startsWith('/api/') ||
-      pathname.startsWith('/assets/')
-    ) {
-      return fetch(request)
+    // Serve static assets from KV
+    try {
+      // Map request to asset (handles SPA routing)
+      const mappedRequest = mapRequestToAsset(request)
+
+      // Get asset from KV
+      const response = await getAssetFromKV(
+        {
+          request: mappedRequest,
+          waitUntil: ctx.waitUntil.bind(ctx),
+        },
+        {
+          cacheControl: {
+            default: '1h',
+            'max-age': 3600,
+          },
+          ASSET_NAMESPACE: env.__STATIC_CONTENT,
+        }
+      )
+
+      // Cache control for HTML (no cache, must revalidate)
+      if (pathname.endsWith('.html') || pathname === '/') {
+        const newHeaders = new Headers(response.headers)
+        newHeaders.set('Cache-Control', 'public, max-age=0, must-revalidate')
+        return new Response(response.body, {
+          status: response.status,
+          statusText: response.statusText,
+          headers: newHeaders,
+        })
+      }
+
+      return response
+    } catch (error) {
+      console.error('Asset serving error:', error)
+      return new Response('Not found', { status: 404 })
     }
-
-    // For SPA routes (no extension), serve index.html
-    const indexRequest = new Request(`${url.origin}/index.html`, {
-      method: request.method,
-      headers: headers,
-      body: request.body,
-    })
-
-    return fetch(indexRequest)
   },
 }
