@@ -1,55 +1,36 @@
 import { getAssetFromKV, mapRequestToAsset } from '@cloudflare/kv-asset-handler'
 
-// Cloudflare Access JWT validation with debugging
+// Cloudflare Access JWT validation
 async function validateAccessJWT(request, env) {
   const token = request.headers.get('Cf-Access-Jwt-Assertion')
 
-  // Fallback values (hardcoded for debugging)
+  // Fallback values
   const AUD = env.CLOUDFLARE_ACCESS_AUD || 'f189d9a0e6304c25e2e58f56d530cfb3a4a38ac803608d17c9d39453d6c0beea'
   const JWKS_URL = env.CLOUDFLARE_ACCESS_JWKS_URL || 'https://maratkurbanov.cloudflareaccess.com/cdn-cgi/access/certs'
 
-  console.log('=== Cloudflare Access JWT Validation Debug ===')
-  console.log('Token present:', !!token)
-  console.log('Token length:', token?.length)
-  console.log('AUD (from env):', env.CLOUDFLARE_ACCESS_AUD)
-  console.log('AUD (fallback):', AUD)
-  console.log('JWKS_URL (from env):', env.CLOUDFLARE_ACCESS_JWKS_URL)
-  console.log('JWKS_URL (fallback):', JWKS_URL)
-  console.log('Environment keys:', Object.keys(env).filter(k => k.includes('ACCESS') || k.includes('CLOUDFLARE')))
+  console.log('🔐 JWT Validation:', { tokenPresent: !!token })
 
   if (!token) {
-    console.log('ERROR: No Cf-Access-Jwt-Assertion header found')
     return {
       valid: false,
-      error: 'Missing Access JWT - ensure Access is enabled for this domain',
-      debug: {
-        headerPresent: false,
-      },
+      error: 'Missing Access JWT',
     }
   }
 
   try {
-    console.log('Token received, attempting validation...')
-    console.log('Using JWKS URL:', JWKS_URL)
-
-    // Fetch the public keys from Cloudflare
+    // Fetch JWKs
     const jwksResponse = await fetch(JWKS_URL)
-
     if (!jwksResponse.ok) {
-      console.error(`JWKs fetch failed: ${jwksResponse.status} ${jwksResponse.statusText}`)
-      throw new Error(`Failed to fetch JWKs: ${jwksResponse.status} ${jwksResponse.statusText}`)
+      throw new Error(`JWKs fetch failed: ${jwksResponse.status}`)
     }
 
     const jwks = await jwksResponse.json()
-    console.log('JWKs fetched successfully, keys count:', jwks.keys?.length || 0)
 
-    // Decode the JWT header to get the key ID
+    // Decode JWT
     const parts = token.split('.')
     if (parts.length !== 3) {
-      throw new Error('Invalid JWT format: expected 3 parts')
+      throw new Error('Invalid JWT format')
     }
-
-    console.log('JWT has 3 parts, attempting decode...')
 
     const headerDecoded = JSON.parse(
       new TextDecoder().decode(
@@ -59,19 +40,12 @@ async function validateAccessJWT(request, env) {
       )
     )
 
-    console.log('JWT Header decoded:', { typ: headerDecoded.typ, alg: headerDecoded.alg, kid: headerDecoded.kid })
-
     const kid = headerDecoded.kid
     const key = jwks.keys.find((k) => k.kid === kid)
 
     if (!key) {
-      console.log('ERROR: Key ID not found in JWKS')
-      console.log('Looking for kid:', kid)
-      console.log('Available kids:', jwks.keys.map(k => k.kid))
       throw new Error('Key not found in JWKS')
     }
-
-    console.log('Key found, decoding payload...')
 
     // Decode payload
     const payload = JSON.parse(
@@ -82,120 +56,84 @@ async function validateAccessJWT(request, env) {
       )
     )
 
-    console.log('Payload decoded:', {
-      email: payload.email,
-      sub: payload.sub,
-      aud: payload.aud,
-      exp: payload.exp,
-    })
-
-    // Validate audience (handle comma-separated audiences)
-    console.log('Audience validation:')
-    console.log('  Expected (AUD):', AUD)
-    console.log('  Got (payload.aud):', payload.aud)
-
-    // Check if our audience is in the list (Cloudflare may send multiple audiences)
+    // Validate audience (handle comma-separated)
     const audiences = typeof payload.aud === 'string'
       ? payload.aud.split(',').map(a => a.trim())
       : Array.isArray(payload.aud)
       ? payload.aud
       : [payload.aud]
 
-    console.log('  Audiences array:', audiences)
-    const audMatch = audiences.includes(AUD)
-    console.log('  Match found:', audMatch)
-
-    if (!audMatch) {
-      console.log('ERROR: Audience mismatch!')
-      console.log('Expected audience not found in JWT audiences')
-      throw new Error(`Invalid audience. Expected: ${AUD}, Got: ${payload.aud}`)
+    if (!audiences.includes(AUD)) {
+      throw new Error('Invalid audience')
     }
 
     // Validate expiration
     const nowSeconds = Math.floor(Date.now() / 1000)
-    console.log('Token expiration check: exp=' + payload.exp + ', now=' + nowSeconds)
-
     if (payload.exp < nowSeconds) {
-      console.log('ERROR: Token expired')
       throw new Error('Token expired')
     }
 
-    console.log('✓ JWT validation successful')
+    console.log('✓ JWT valid:', payload.email)
     return {
       valid: true,
-      user: payload.email || payload.sub,
       email: payload.email,
     }
   } catch (error) {
-    console.error('JWT validation error:', error.message)
-    console.error('Error type:', error.constructor.name)
-    if (error.stack) console.error('Stack:', error.stack)
+    console.error('❌ JWT validation failed:', error.message)
     return {
       valid: false,
       error: error.message,
-      debug: {
-        tokenPresent: !!token,
-        tokenLength: token?.length,
-        errorType: error.constructor.name,
-      },
     }
   }
 }
 
-// Main Worker fetch handler
+// Main Worker
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url)
     const pathname = url.pathname
 
-    console.log(`${request.method} ${pathname}`)
+    console.log(`📨 ${request.method} ${pathname}`)
 
-    // Skip Access validation for health checks
+    // Health check (no auth required)
     if (pathname === '/health') {
       return new Response('OK', { status: 200 })
     }
 
-    // Skip Access validation for local development (localhost)
+    // Skip Access validation for localhost
     const isLocalhost = url.hostname === 'localhost' || url.hostname === '127.0.0.1'
 
-    if (isLocalhost) {
-      console.log('⚠️  Local development mode - Access validation skipped')
+    if (!isLocalhost) {
+      // Validate JWT on production
+      const accessValidation = await validateAccessJWT(request, env)
+
+      if (!accessValidation.valid) {
+        return new Response(
+          JSON.stringify({
+            error: 'Unauthorized',
+            message: accessValidation.error,
+          }, null, 2),
+          {
+            status: 401,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        )
+      }
+
+      console.log(`👤 Authenticated: ${accessValidation.email}`)
+    } else {
+      console.log('⚠️  Localhost mode - Auth skipped')
     }
-
-    // Validate Cloudflare Access JWT (skip for localhost)
-    const accessValidation = isLocalhost
-      ? { valid: true, user: 'localhost-dev', email: 'dev@localhost' }
-      : await validateAccessJWT(request, env)
-
-    if (!accessValidation.valid) {
-      console.log('Access validation failed:', accessValidation.error)
-      return new Response(
-        JSON.stringify({
-          error: 'Unauthorized',
-          message: accessValidation.error,
-          debug: accessValidation.debug,
-        }, null, 2),
-        {
-          status: 401,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      )
-    }
-
-    console.log(`Access granted for user: ${accessValidation.email}`)
-
-    // Add user info to request headers
-    const headers = new Headers(request.headers)
-    headers.set('X-Access-User', accessValidation.email || accessValidation.user)
 
     // Serve static assets from KV
     try {
-      // Map request to asset (handles SPA routing)
-      const mappedRequest = mapRequestToAsset(request)
+      console.log('📦 Serving from KV...')
 
-      // Get asset from KV
+      // Map request to asset
+      const mappedRequest = mapRequestToAsset(request)
+      console.log('📍 Mapped path:', new URL(mappedRequest.url).pathname)
+
+      // Get from KV
       const response = await getAssetFromKV(
         {
           request: mappedRequest,
@@ -206,11 +144,10 @@ export default {
             default: '1h',
             'max-age': 3600,
           },
-          ASSET_NAMESPACE: env.__STATIC_CONTENT,
         }
       )
 
-      // Cache control for HTML (no cache, must revalidate)
+      // Set cache headers for HTML
       if (pathname.endsWith('.html') || pathname === '/') {
         const newHeaders = new Headers(response.headers)
         newHeaders.set('Cache-Control', 'public, max-age=0, must-revalidate')
@@ -223,8 +160,20 @@ export default {
 
       return response
     } catch (error) {
-      console.error('Asset serving error:', error)
-      return new Response('Not found', { status: 404 })
+      console.error('❌ Asset error:', error.message)
+      console.error('📋 Error type:', error.constructor.name)
+
+      return new Response(
+        JSON.stringify({
+          error: 'Not found',
+          message: error.message,
+          path: pathname,
+        }, null, 2),
+        {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      )
     }
   },
 }
