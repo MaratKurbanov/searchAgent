@@ -89,12 +89,15 @@ export default {
     // Serve static assets from KV using the manifest
     try {
       console.log('📦 Serving from KV...')
-      console.log('🔍 KV Binding Check:', {
-        hasStaticContent: !!env.__STATIC_CONTENT,
-        bindingType: typeof env.__STATIC_CONTENT,
-        bindingKeys: env.__STATIC_CONTENT ? Object.keys(env.__STATIC_CONTENT) : null,
-        envKeys: Object.keys(env)
-      })
+      if (!env.__STATIC_CONTENT) {
+        throw new Error('KV binding __STATIC_CONTENT is not available')
+      }
+
+      // Test if the binding has KV methods
+      if (typeof env.__STATIC_CONTENT.get !== 'function') {
+        console.error('❌ KV binding missing .get() method. Type:', typeof env.__STATIC_CONTENT)
+        throw new Error('KV binding is not a valid KV namespace')
+      }
 
       // Map request to asset (handles SPA routing)
       const mappedRequest = mapRequestToAsset(request)

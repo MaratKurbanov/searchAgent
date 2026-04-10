@@ -1,60 +1,42 @@
-# Cloudflare Workers Configuration - Search Agent
-# Consistent settings across all deployments
-
-# === Base Configuration (shared across all environments) ===
 name = "search-agent"
 main = "src/worker.js"
-compatibility_date = "2024-01-01"
+compatibility_date = "2026-04-10"
 compatibility_flags = ["nodejs_compat"]
 workers_dev = true
 
-# === Build Configuration ===
-[build]
-command = "npm run build"
-cwd = "."
+[assets]
+directory = "./public"
+binding = "ASSETS"
 
-# === Static Site Configuration ===
-[site]
-bucket = "public"
-include = ["*.html", "*.js", "*.css", "*.svg", "*.png", "*.jpg", "*.gif", "*.json", "*.woff", "*.woff2", "*.ttf"]
-exclude = ["node_modules"]
+[ai]
+binding = "AI"
 
-# === KV Namespace Binding (must be explicit when using [site]) ===
-[[kv_namespaces]]
-binding = "__STATIC_CONTENT"
-id = "3d323d87029142ffb6359d7d693b118b"
-preview_id = "3d323d87029142ffb6359d7d693b118b"
-
-# === Performance & Caching ===
 [limits]
 cpu_seconds = 30
 
-# === Observability (Base - applied to all environments) ===
 [observability]
-enabled = false
+enabled = true
 head_sampling_rate = 1
 
 [observability.logs]
 enabled = true
-head_sampling_rate = 1
-persist = true
 invocation_logs = true
 
 [observability.traces]
 enabled = false
-persist = true
 head_sampling_rate = 1
 
-# === Production Environment ===
 [env.production]
 vars = { CLOUDFLARE_ACCESS_AUD = "f189d9a0e6304c25e2e58f56d530cfb3a4a38ac803608d17c9d39453d6c0beea", CLOUDFLARE_ACCESS_JWKS_URL = "https://maratkurbanov.cloudflareaccess.com/cdn-cgi/access/certs", ENVIRONMENT = "production", LOG_LEVEL = "warn" }
 
+[env.production.observability]
+enabled = true
+head_sampling_rate = 1
+
 [env.production.observability.logs]
 enabled = true
-persist = true
 invocation_logs = true
 
 [env.production.observability.traces]
 enabled = false
-persist = true
 head_sampling_rate = 1
