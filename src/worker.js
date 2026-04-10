@@ -105,7 +105,8 @@ export default {
             default: '1h',
             'max-age': 3600,
           },
-        }
+        },
+        env
       )
 
       // Set cache headers for HTML files
@@ -137,7 +138,8 @@ export default {
               cacheControl: {
                 default: '1h',
               },
-            }
+            },
+            env
           )
         } catch (fallbackError) {
           console.error('❌ Fallback failed:', fallbackError.message)

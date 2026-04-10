@@ -20,7 +20,6 @@ preview_id = "3d323d87029142ffb6359d7d693b118b"
 [build]
 command = "npm run build"
 cwd = "."
-watch_paths = ["src/**/*.{js,jsx,css}"]
 
 # === Static Site Configuration ===
 [site]
