@@ -1,4 +1,4 @@
-name = "cloudflare-ai-search"
+name = "search-agent"
 main = "src/worker.js"
 compatibility_date = "2024-01-01"
 
@@ -18,9 +18,9 @@ pattern = "*"
 zone_name = "example.com"
 
 [env.production]
-name = "cloudflare-ai-search-prod"
+name = "search-agent-prod"
 route = "https://example.com/*"
 
 [env.development]
-name = "cloudflare-ai-search-dev"
+name = "search-agent-dev"
 route = "http://localhost:8787/*"
