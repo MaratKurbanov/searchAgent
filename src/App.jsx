@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import '@cloudflare/ai-search-snippet'
 import Settings from './Settings'
+import ChatPageWrapper from './ChatPageWrapper'
 import './App.css'
 
 const API_URL = 'https://daf1d29e-1140-4bbf-8f0b-0d6a6d980b32.search.ai.cloudflare.com/'
@@ -52,15 +53,13 @@ export default function App() {
         </button>
 
         <div className="chat-wrapper">
-          {/* @ts-ignore */}
-          <chat-page-snippet
-            api-url={API_URL}
-            theme="auto"
-            data-match-threshold={matchThreshold}
-            data-max-results={maxResults}
-            data-context-expansion={contextExpansion}
-            data-rewrite-query={rewriteQuery}
-            data-re-rank-results={reRankResults}
+          <ChatPageWrapper
+            apiUrl={API_URL}
+            matchThreshold={matchThreshold}
+            maxResults={maxResults}
+            contextExpansion={contextExpansion}
+            rewriteQuery={rewriteQuery}
+            reRankResults={reRankResults}
           />
         </div>
       </main>
