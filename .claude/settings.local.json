@@ -19,7 +19,9 @@
       "Bash(npm install:*)",
       "Bash(npm uninstall:*)",
       "Bash(npm run:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(npm list:*)",
+      "WebFetch(domain:developers.cloudflare.com)"
     ]
   }
 }

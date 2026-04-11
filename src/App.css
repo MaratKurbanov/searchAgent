@@ -1,8 +1,10 @@
 .app-container {
   height: 100vh;
+  height: 100dvh;
   display: flex;
   background: var(--bg-color);
   color: var(--text-color);
+  overflow: hidden;
 }
 
 /* Side Panel */
@@ -140,13 +142,16 @@
 .main-content {
   flex: 1;
   display: flex;
-  align-items: flex-start;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
   padding: 20px;
   padding-top: 20px;
   width: 100%;
-  overflow: hidden;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
   position: relative;
+  gap: 12px;
 }
 
 /* Settings Toggle Button */
@@ -184,7 +189,7 @@
 .chat-wrapper {
   width: 80%;
   max-width: 1200px;
-  height: calc(100vh - 60px);
+  height: calc(100dvh - 100px);
   display: flex;
   flex-direction: column;
   border-radius: 12px;
@@ -242,6 +247,7 @@
 @media (max-width: 768px) {
   .app-container {
     flex-direction: column;
+    overflow: hidden;
   }
 
   .side-panel {
@@ -254,9 +260,10 @@
     overflow-y: hidden;
     gap: 32px;
     padding: 16px;
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
+    right: 0;
     z-index: 50;
     transform: translateY(-100%);
   }
@@ -284,16 +291,27 @@
   .main-content {
     padding: 12px;
     padding-top: 12px;
+    flex: 1;
+    width: 100%;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .chat-wrapper {
-    width: 95%;
-    height: calc(100vh - 60px);
+    width: 100%;
+    height: calc(100dvh - 60px);
     border-radius: 8px;
   }
 
   .settings-toggle {
     top: 12px;
     left: 12px;
+    width: 36px;
+    height: 36px;
+  }
+
+  .settings-toggle svg {
+    width: 18px;
+    height: 18px;
   }
 }

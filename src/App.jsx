@@ -11,7 +11,7 @@ export default function App() {
   const [contextExpansion, setContextExpansion] = useState(0)
   const [rewriteQuery, setRewriteQuery] = useState(true)
   const [reRankResults, setReRankResults] = useState(false)
-  const [settingsOpen, setSettingsOpen] = useState(true)
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   return (
     <div className="app-container">
