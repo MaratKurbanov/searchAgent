@@ -29,6 +29,9 @@ head_sampling_rate = 1
 [env.production]
 vars = { CLOUDFLARE_ACCESS_AUD = "f189d9a0e6304c25e2e58f56d530cfb3a4a38ac803608d17c9d39453d6c0beea", CLOUDFLARE_ACCESS_JWKS_URL = "https://maratkurbanov.cloudflareaccess.com/cdn-cgi/access/certs", ENVIRONMENT = "production", LOG_LEVEL = "warn" }
 
+[env.production.ai]
+binding = "AI"
+
 [env.production.observability]
 enabled = true
 head_sampling_rate = 1

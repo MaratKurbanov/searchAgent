@@ -40,14 +40,15 @@ export default function App() {
           title={settingsOpen ? 'Hide settings' : 'Show settings'}
         >
           {settingsOpen ? (
-            // Icon for when settings are open (close/hide)
+            // Icon for when settings are open (arrow left to close)
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <polyline points="15 18 9 12 15 6"></polyline>
             </svg>
           ) : (
-            // Icon for when settings are closed (open/show)
+            // Icon for when settings are closed (gears icon)
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <polyline points="9 18 15 12 9 6"></polyline>
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m2.12 2.12l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m2.12-2.12l4.24-4.24M19.78 19.78l-4.24-4.24m-2.12-2.12l-4.24-4.24M19.78 4.22l-4.24 4.24m-2.12 2.12l-4.24 4.24"></path>
             </svg>
           )}
         </button>
