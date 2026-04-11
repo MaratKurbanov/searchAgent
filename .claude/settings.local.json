@@ -21,7 +21,9 @@
       "Bash(npm run:*)",
       "Bash(ls:*)",
       "Bash(npm list:*)",
-      "WebFetch(domain:developers.cloudflare.com)"
+      "WebFetch(domain:developers.cloudflare.com)",
+      "Bash(git add:*)",
+      "Bash(git commit -m ':*)"
     ]
   }
 }
