@@ -306,9 +306,9 @@
 
   .settings-toggle {
     position: fixed;
-    bottom: 12px;
     left: 12px;
-    top: auto;
+    top: 50%;
+    transform: translateY(-50%);
     width: 40px;
     height: 40px;
     z-index: 101;
@@ -317,9 +317,5 @@
   .settings-toggle svg {
     width: 20px;
     height: 20px;
-  }
-
-  .main-content {
-    padding-bottom: 60px;
   }
 }
