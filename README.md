@@ -113,13 +113,48 @@ The `wrangler.toml` file contains:
 
 ## API Configuration
 
-The app uses the Cloudflare AI Search endpoint:
+The AI Search endpoint is set via the `VITE_API_URL` environment variable, injected at build time by Vite.
+
+For local development, set it in `.env`:
 
 ```
-https://daf1d29e-1140-4bbf-8f0b-0d6a6d980b32.search.ai.cloudflare.com/
+VITE_API_URL=https://<your-uuid>.search.ai.cloudflare.com/
 ```
 
-To change the endpoint, modify the `API_URL` constant in `src/App.jsx`.
+For deployments, pass it as a build-time variable (see Multi-Dataset Deployment below).
+
+## Multi-Dataset Deployment
+
+This repo is designed to be deployed multiple times — once per dataset/vector index — from a single codebase. Each deployment is an independent Cloudflare Worker with its own URL and access policy.
+
+### What changes per deployment
+
+| Thing | Where to change |
+|---|---|
+| AI Search endpoint UUID | `VITE_API_URL` env var at build time |
+| Worker name / subdomain | `name` field in `[env.<name>]` in `wrangler.toml` |
+| Cloudflare Access audience (AUD) | `CLOUDFLARE_ACCESS_AUD` var in `[env.<name>]` in `wrangler.toml` |
+| System prompt | Cloudflare AI Search dashboard (per index, not in this repo) |
+
+### Steps to add a new dataset deployment
+
+**On Cloudflare (dashboard):**
+1. Create (or identify) the AI Search index for the new dataset — copy its endpoint UUID
+2. Configure the system prompt for that index in the AI Search dashboard
+3. Create a new Cloudflare Access application scoped to the new Worker's subdomain (e.g. `search-agent-dataset-b.maratkurbanov.workers.dev`) — copy the AUD value
+
+**Locally:**
+1. Add a new `[env.<name>]` block in `wrangler.toml`:
+   ```toml
+   [env.dataset-b]
+   name = "search-agent-dataset-b"
+   vars = { CLOUDFLARE_ACCESS_AUD = "<new-aud>", CLOUDFLARE_ACCESS_JWKS_URL = "https://maratkurbanov.cloudflareaccess.com/cdn-cgi/access/certs", ENVIRONMENT = "production", LOG_LEVEL = "warn" }
+   ```
+2. Build with the new endpoint, then deploy:
+   ```bash
+   VITE_API_URL=https://<new-uuid>.search.ai.cloudflare.com/ npm run build
+   wrangler deploy --env dataset-b
+   ```
 
 ## Project Structure
 
@@ -148,12 +183,18 @@ package.json       # Project dependencies
 
 ## Deployment Checklist
 
-- [ ] Update domain in `wrangler.toml`
-- [ ] Configure environment variables if needed
-- [ ] Run `npm run worker:build` for dry run
-- [ ] Review changes in preview
-- [ ] Run `npm run worker:deploy` to deploy
+**First deployment (or new dataset):**
+- [ ] Create AI Search index and copy endpoint UUID
+- [ ] Configure system prompt in AI Search dashboard
+- [ ] Create Cloudflare Access application, copy AUD value
+- [ ] Add `[env.<name>]` block to `wrangler.toml` with new name + AUD
+- [ ] Build: `VITE_API_URL=https://<uuid>.search.ai.cloudflare.com/ npm run build`
+- [ ] Deploy: `wrangler deploy --env <name>`
 - [ ] Test deployed application
+
+**Updating existing deployment:**
+- [ ] Run `npm run build` (picks up `VITE_API_URL` from `.env`)
+- [ ] Run `npm run worker:deploy` (deploys to `production` env)
 
 ## Development Notes
 

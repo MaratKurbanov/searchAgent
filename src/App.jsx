@@ -4,7 +4,7 @@ import Settings from './Settings'
 import ChatPageWrapper from './ChatPageWrapper'
 import './App.css'
 
-const API_URL = 'https://daf1d29e-1140-4bbf-8f0b-0d6a6d980b32.search.ai.cloudflare.com/'
+const API_URL = window.API_URL || import.meta.env.VITE_API_URL
 
 export default function App() {
   const [matchThreshold, setMatchThreshold] = useState(0.3)

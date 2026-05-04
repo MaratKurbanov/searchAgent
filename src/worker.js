@@ -83,14 +83,19 @@ export default {
       response = await env.ASSETS.fetch(new Request(`${url.origin}/index.html`, request))
     }
 
-    // Set cache headers for HTML files
-    if (pathname.endsWith('.html') || pathname === '/') {
-      const newHeaders = new Headers(response.headers)
-      newHeaders.set('Cache-Control', 'public, max-age=0, must-revalidate')
-      return new Response(response.body, {
+    // Inject API_URL and set cache headers for HTML responses
+    const contentType = response.headers.get('Content-Type') || ''
+    if (contentType.includes('text/html')) {
+      const html = await response.text()
+      const apiUrl = env.API_URL || ''
+      const injected = html.replace(
+        '</head>',
+        `<script>window.API_URL=${JSON.stringify(apiUrl)};</script></head>`
+      )
+      return new Response(injected, {
         status: response.status,
         statusText: response.statusText,
-        headers: newHeaders,
+        headers: { 'Content-Type': 'text/html;charset=UTF-8', 'Cache-Control': 'public, max-age=0, must-revalidate' },
       })
     }
 

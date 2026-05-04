@@ -8,9 +8,11 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "worker:dev": "concurrently \"vite build --watch\" \"wrangler dev --env production\"",
-    "worker:build": "vite build && wrangler deploy --dry-run --env production",
-    "worker:deploy": "vite build && wrangler deploy --env production"
+    "worker:dev": "concurrently \"vite build --watch\" \"wrangler dev --env hadis\"",
+    "worker:build": "vite build && wrangler deploy --dry-run --env hadis",
+    "worker:deploy": "npm run build && wrangler deploy --env hadis && wrangler deploy --env keller",
+    "worker:deploy:hadis": "wrangler deploy --env hadis",
+    "worker:deploy:keller": "wrangler deploy --env keller"
   },
   "dependencies": {
     "@cloudflare/ai-search-snippet": "^0.0.30",
