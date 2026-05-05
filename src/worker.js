@@ -75,6 +75,14 @@ export default {
       }
     }
 
+    // Serve runtime config — visit /config.js in browser to verify the correct API_URL is set
+    if (pathname === '/config.js') {
+      const apiUrl = env.API_URL || ''
+      return new Response(`window.API_URL=${JSON.stringify(apiUrl)};`, {
+        headers: { 'Content-Type': 'application/javascript', 'Cache-Control': 'public, max-age=0, must-revalidate' },
+      })
+    }
+
     // Serve static assets using modern env.ASSETS binding
     let response = await env.ASSETS.fetch(request)
 
@@ -83,21 +91,12 @@ export default {
       response = await env.ASSETS.fetch(new Request(`${url.origin}/index.html`, request))
     }
 
-    // Inject API_URL and set cache headers for HTML responses
+    // Set cache headers for HTML
     const contentType = response.headers.get('Content-Type') || ''
-    const isHtml = contentType.includes('text/html') || pathname === '/' || pathname.endsWith('.html')
-    if (isHtml) {
-      const html = await response.text()
-      const apiUrl = env.API_URL || ''
-      const injected = html.replace(
-        '</head>',
-        `<script>window.API_URL=${JSON.stringify(apiUrl)};</script></head>`
-      )
-      return new Response(injected, {
-        status: response.status,
-        statusText: response.statusText,
-        headers: { 'Content-Type': 'text/html;charset=UTF-8', 'Cache-Control': 'public, max-age=0, must-revalidate' },
-      })
+    if (contentType.includes('text/html') || pathname === '/' || pathname.endsWith('.html')) {
+      const newHeaders = new Headers(response.headers)
+      newHeaders.set('Cache-Control', 'public, max-age=0, must-revalidate')
+      return new Response(response.body, { status: response.status, statusText: response.statusText, headers: newHeaders })
     }
 
     return response

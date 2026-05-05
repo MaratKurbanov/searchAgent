@@ -23,7 +23,8 @@
       "Bash(npm list:*)",
       "WebFetch(domain:developers.cloudflare.com)",
       "Bash(git add:*)",
-      "Bash(git commit -m ':*)"
+      "Bash(git commit -m ':*)",
+      "WebFetch(domain:search-agent-keller.maratkurbanov.workers.dev)"
     ]
   }
 }
