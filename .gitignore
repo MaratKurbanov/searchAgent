@@ -17,6 +17,9 @@ public
 .wrangler/
 wrangler.env
 
+# Playwright MCP artifacts
+.playwright-mcp/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
