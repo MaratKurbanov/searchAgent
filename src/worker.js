@@ -85,7 +85,8 @@ export default {
 
     // Inject API_URL and set cache headers for HTML responses
     const contentType = response.headers.get('Content-Type') || ''
-    if (contentType.includes('text/html')) {
+    const isHtml = contentType.includes('text/html') || pathname === '/' || pathname.endsWith('.html')
+    if (isHtml) {
       const html = await response.text()
       const apiUrl = env.API_URL || ''
       const injected = html.replace(
