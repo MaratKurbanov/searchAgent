@@ -61,6 +61,14 @@ export default {
       return new Response('OK', { status: 200 })
     }
 
+    // Runtime config — must be before auth so the browser can load it via <script>
+    if (pathname === '/config.js') {
+      const apiUrl = env.API_URL || ''
+      return new Response(`window.API_URL=${JSON.stringify(apiUrl)};`, {
+        headers: { 'Content-Type': 'application/javascript', 'Cache-Control': 'public, max-age=0, must-revalidate' },
+      })
+    }
+
     // Skip auth on localhost
     const isLocalhost = url.hostname === 'localhost' || url.hostname === '127.0.0.1'
 
@@ -73,14 +81,6 @@ export default {
           { status: 401, headers: { 'Content-Type': 'application/json' } }
         )
       }
-    }
-
-    // Serve runtime config — visit /config.js in browser to verify the correct API_URL is set
-    if (pathname === '/config.js') {
-      const apiUrl = env.API_URL || ''
-      return new Response(`window.API_URL=${JSON.stringify(apiUrl)};`, {
-        headers: { 'Content-Type': 'application/javascript', 'Cache-Control': 'public, max-age=0, must-revalidate' },
-      })
     }
 
     // Serve static assets using modern env.ASSETS binding
