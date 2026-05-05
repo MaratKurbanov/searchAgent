@@ -65,7 +65,7 @@ export default {
     if (pathname === '/config.js') {
       const apiUrl = env.API_URL || ''
       return new Response(`window.API_URL=${JSON.stringify(apiUrl)};`, {
-        headers: { 'Content-Type': 'application/javascript', 'Cache-Control': 'public, max-age=0, must-revalidate' },
+        headers: { 'Content-Type': 'application/javascript', 'Cache-Control': 'no-store' },
       })
     }
 
