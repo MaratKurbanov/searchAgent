@@ -51,7 +51,9 @@
       "Bash(npx wrangler *)",
       "Bash(echo \"wrangler PID: $!\")",
       "Bash(lsof -ti:8787)",
-      "mcp__playwright__browser_evaluate"
+      "mcp__playwright__browser_evaluate",
+      "Bash(xargs kill *)",
+      "Skill(update-config)"
     ]
   }
 }

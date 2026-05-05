@@ -64,7 +64,8 @@ export default {
     // Runtime config — must be before auth so the browser can load it via <script>
     if (pathname === '/config.js') {
       const apiUrl = env.API_URL || ''
-      return new Response(`window.API_URL=${JSON.stringify(apiUrl)};`, {
+      const siteName = env.SITE_NAME || ''
+      return new Response(`window.API_URL=${JSON.stringify(apiUrl)};window.SITE_NAME=${JSON.stringify(siteName)};`, {
         headers: { 'Content-Type': 'application/javascript', 'Cache-Control': 'no-store' },
       })
     }

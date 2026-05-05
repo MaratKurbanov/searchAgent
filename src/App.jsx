@@ -6,6 +6,7 @@ import SearchBarWrapper from './SearchBarWrapper'
 import './App.css'
 
 const API_URL = window.API_URL || import.meta.env.VITE_API_URL
+const SITE_NAME = window.SITE_NAME || import.meta.env.VITE_SITE_NAME || ''
 
 export default function App() {
   const [matchThreshold, setMatchThreshold] = useState(0.3)
@@ -33,6 +34,8 @@ export default function App() {
       />
 
       <main className="main-content">
+        {SITE_NAME && <h1 className="site-name">{SITE_NAME}</h1>}
+
         <button
           className="settings-toggle"
           onClick={() => setSettingsOpen(!settingsOpen)}

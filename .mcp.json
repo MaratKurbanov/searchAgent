@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "hadis": {
+      "type": "url",
+      "url": "https://daf1d29e-1140-4bbf-8f0b-0d6a6d980b32.search.ai.cloudflare.com/mcp"
+    },
+    "keller": {
+      "type": "url",
+      "url": "https://39aacfde-5cd3-47e4-91f4-8a1295082da4.search.ai.cloudflare.com/mcp"
+    }
+  }
+}

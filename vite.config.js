@@ -12,8 +12,9 @@ export default defineConfig(({ mode }) => {
         configureServer(server) {
           server.middlewares.use('/config.js', (req, res) => {
             const apiUrl = env.VITE_API_URL || ''
+            const siteName = env.VITE_SITE_NAME || ''
             res.setHeader('Content-Type', 'application/javascript')
-            res.end(`window.API_URL=${JSON.stringify(apiUrl)};`)
+            res.end(`window.API_URL=${JSON.stringify(apiUrl)};window.SITE_NAME=${JSON.stringify(siteName)};`)
           })
         },
       },

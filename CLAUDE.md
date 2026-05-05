@@ -45,7 +45,8 @@ Browser → Cloudflare Access (JWT) → Worker (src/worker.js)
 ```bash
 npm run dev                       # local dev (uses VITE_API_URL from .env as fallback)
 npm run build                     # build once — same bundle for all deployments
-npm run worker:dev                # wrangler dev against hadis env
+npm run worker:dev                # wrangler dev (local) against hadis env — port 8787
+npm run worker:dev:keller         # wrangler dev (local) against keller env — port 8787
 npm run worker:deploy             # build once, deploy to both hadis + keller
 npm run worker:deploy:hadis       # deploy hadis only (no build)
 npm run worker:deploy:keller      # deploy keller only (no build)

@@ -186,6 +186,17 @@
   display: block;
 }
 
+/* Site name header */
+.site-name {
+  position: absolute;
+  top: 20px;
+  left: 72px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-color);
+  margin: 0;
+}
+
 /* Tab bar */
 .tab-bar {
   display: flex;
