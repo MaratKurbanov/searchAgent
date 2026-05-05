@@ -58,7 +58,7 @@ head_sampling_rate = 1
 name = "search-agent-keller"
 workers_dev = true
 preview_urls = false
-vars = { API_URL = "<keller-ai-search-url>", CLOUDFLARE_ACCESS_AUD = "<keller-aud>", CLOUDFLARE_ACCESS_JWKS_URL = "https://maratkurbanov.cloudflareaccess.com/cdn-cgi/access/certs", ENVIRONMENT = "production", LOG_LEVEL = "warn" }
+vars = { API_URL = "https://39aacfde-5cd3-47e4-91f4-8a1295082da4.search.ai.cloudflare.com/", CLOUDFLARE_ACCESS_AUD = "f189d9a0e6304c25e2e58f56d530cfb3a4a38ac803608d17c9d39453d6c0beea", CLOUDFLARE_ACCESS_JWKS_URL = "https://maratkurbanov.cloudflareaccess.com/cdn-cgi/access/certs", ENVIRONMENT = "production", LOG_LEVEL = "warn" }
 
 [env.keller.ai]
 binding = "AI"
