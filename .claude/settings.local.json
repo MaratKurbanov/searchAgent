@@ -63,7 +63,9 @@
       "Bash(node *)",
       "Bash(wait)",
       "Bash(sed -n '1,5p' /Users/maratkurbanov/Documents/work/cloudflare/searchAgent/chat-test.js)",
-      "Bash(sed -n '158,163p' /Users/maratkurbanov/Documents/work/cloudflare/searchAgent/chat-test.js)"
+      "Bash(sed -n '158,163p' /Users/maratkurbanov/Documents/work/cloudflare/searchAgent/chat-test.js)",
+      "Bash(python3 *)",
+      "Bash(grep -o 'qe\\\\{3,\\\\}' /Users/maratkurbanov/Documents/work/cloudflare/searchAgent/public/assets/full-sermons/becoming-clean.txt)"
     ]
   },
   "enabledMcpjsonServers": [

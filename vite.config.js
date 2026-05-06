@@ -19,6 +19,7 @@ export default defineConfig(({ mode }) => {
         },
       },
     ],
+    publicDir: 'static',
     build: {
       outDir: 'public',
       emptyOutDir: true,

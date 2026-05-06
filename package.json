@@ -4,8 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "dev": "node scripts/generate-manifest.js && vite",
+    "build": "node scripts/generate-manifest.js && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "worker:dev": "concurrently \"vite build --watch\" \"wrangler dev --env hadis --local\"",

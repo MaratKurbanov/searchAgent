@@ -3,6 +3,7 @@ import '@cloudflare/ai-search-snippet'
 import Settings from './Settings'
 import ChatPageWrapper from './ChatPageWrapper'
 import SearchBarWrapper from './SearchBarWrapper'
+import SermonList from './SermonList'
 import './App.css'
 
 const API_URL = window.API_URL || import.meta.env.VITE_API_URL
@@ -66,6 +67,12 @@ export default function App() {
           >
             Search
           </button>
+          <button
+            className={`tab-button${activeTab === 'read' ? ' active' : ''}`}
+            onClick={() => setActiveTab('read')}
+          >
+            Read
+          </button>
         </div>
 
         <div className="search-bar-wrapper" hidden={activeTab !== 'search'}>
@@ -81,6 +88,10 @@ export default function App() {
             rewriteQuery={rewriteQuery}
             reRankResults={reRankResults}
           />
+        </div>
+
+        <div className="read-wrapper" hidden={activeTab !== 'read'}>
+          <SermonList />
         </div>
       </main>
     </div>
