@@ -1,0 +1,57 @@
+diff --git a/node_modules/@cloudflare/ai-search-snippet/dist/search-snippet.es.js b/node_modules/@cloudflare/ai-search-snippet/dist/search-snippet.es.js
+index 400ffce..7b599ea 100644
+--- a/node_modules/@cloudflare/ai-search-snippet/dist/search-snippet.es.js
++++ b/node_modules/@cloudflare/ai-search-snippet/dist/search-snippet.es.js
+@@ -96,7 +96,7 @@ class _ {
+         stream: i.streaming,
+         max_results: i.maxResults,
+         ...e === "search" && {
+-          ai_search_options: { retrieval: { metadata_only: !0 } }
++          ai_search_options: {}
+         }
+       }),
+       headers: {
+@@ -129,16 +129,23 @@ class _ {
+       const c = await n.json();
+       if (c.success && c.result)
+         return c.result.chunks.map(
+-          (l) => ({
+-            type: "result",
+-            id: l.id,
+-            title: S(l.item.metadata?.title),
+-            description: l.item.metadata?.description ? S(l.item.metadata?.description) : "",
+-            timestamp: l.item.timestamp ?? void 0,
+-            url: l.item.key,
+-            image: l.item.metadata?.image || void 0,
+-            metadata: l.item.metadata
+-          })
++          (l) => {
++            const _t = l.text || "";
++            const _tm = _t.match(/^TITLE:\s*(.+?)(?:\s+(?:SCRIPTURE|TOPICS|SERIES|URL):)/);
++            const _um = _t.match(/URL:\s*(https?:\/\/[^\s]+)/);
++            const _si = _t.search(/={5,}/);
++            const _body = _si > -1 ? _t.slice(_si).replace(/^=+\s*/, "").trim() : _t;
++            return {
++              type: "result",
++              id: l.id,
++              title: _tm?.[1]?.trim() || S(l.item.metadata?.title) || l.item.key.replace(/__chunk_\d+\.txt$/, "").replace(/-/g, " "),
++              description: _body || (l.item.metadata?.description ? S(l.item.metadata?.description) : ""),
++              timestamp: l.item.timestamp ?? void 0,
++              url: _um?.[1] || l.item.metadata?.url || l.item.key,
++              image: l.item.metadata?.image || void 0,
++              metadata: l.item.metadata
++            };
++          }
+         );
+       throw c.success === !1 ? new Error(c.error) : new Error("Unknown error");
+     } finally {
+diff --git a/node_modules/@cloudflare/ai-search-snippet/dist/search-snippet.umd.js b/node_modules/@cloudflare/ai-search-snippet/dist/search-snippet.umd.js
+index e54963f..f22bf27 100644
+--- a/node_modules/@cloudflare/ai-search-snippet/dist/search-snippet.umd.js
++++ b/node_modules/@cloudflare/ai-search-snippet/dist/search-snippet.umd.js
+@@ -1,4 +1,4 @@
+-(function(p,h){typeof exports=="object"&&typeof module<"u"?h(exports):typeof define=="function"&&define.amd?define(["exports"],h):(p=typeof globalThis<"u"?globalThis:p||self,h(p.SearchSnippet={}))})(this,(function(p){"use strict";var Z=Object.defineProperty;var Q=(p,h,w)=>h in p?Z(p,h,{enumerable:!0,configurable:!0,writable:!0,value:w}):p[h]=w;var a=(p,h,w)=>Q(p,typeof h!="symbol"?h+"":h,w);const h=["Searching...","Digging through results...","Scanning the knowledge base...","Finding the best matches...","Sifting through the data...","Almost there...","Looking far and wide...","Connecting the dots...","Rummaging through pages...","Hunting down answers..."];function L(c,i){let e;function t(...s){clearTimeout(e),e=setTimeout(()=>{c(...s)},i)}return t.cancel=()=>clearTimeout(e),t}function d(c){const i=document.createElement("div");return i.textContent=c,i.innerHTML}function I(c){return new DOMParser().parseFromString(c,"text/html").documentElement.textContent||""}function O(c){const i=new Date(c),t=new Date().getTime()-i.getTime();if(t<6e4)return"Just now";if(t<36e5){const s=Math.floor(t/6e4);return`${s} ${s===1?"minute":"minutes"} ago`}if(t<864e5){const s=Math.floor(t/36e5);return`${s} ${s===1?"hour":"hours"} ago`}return i.toLocaleString(void 0,{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})}function z(c){return new Date(c).toLocaleDateString(void 0,{month:"short",day:"numeric"})}function T(c="id"){return`${c}-${Date.now()}-${Math.random().toString(36).substr(2,9)}`}function u(c,i){return c!==null?c:i}function m(c,i){return c===null?i:c==="true"||c===""}function x(c,i){if(c===null)return i;const e=Number.parseInt(c,10);return Number.isNaN(e)?i:e}function v(c,i){return new CustomEvent(c,{detail:i,bubbles:!0,composed:!0,cancelable:!0})}function k(c){if(!c)throw new Error("API URL is required");return new A(c)}class A{constructor(i){a(this,"activeRequests",new Map);a(this,"baseUrl");this.baseUrl=i.replace(/\/$/,"")}request(i={},e,t){const s=e==="search"?"snippet-search":"snippet-chat-completions";return fetch(`${this.baseUrl}/${e}`,{method:"POST",body:JSON.stringify({messages:[{role:"user",content:i.query}],stream:i.streaming,max_results:i.maxResults,...e==="search"&&{ai_search_options:{retrieval:{metadata_only:!0}}}}),headers:{"Content-Type":"application/json","cf-ai-search-source":s},signal:t})}async search(i,e={}){const t=this.generateRequestId(),s=new AbortController,r=e.signal||s.signal;this.registerRequest(t,s);try{const n=await this.request({query:i,streaming:!1,maxResults:e.maxResults||30},"search",r);if(!n.ok)throw new Error(`HTTP error! status: ${n.status}`);if(!n.body)throw new Error("Response body is empty");const o=await n.json();if(o.success&&o.result)return o.result.chunks.map(l=>({type:"result",id:l.id,title:I(l.item.metadata?.title),description:l.item.metadata?.description?I(l.item.metadata?.description):"",timestamp:l.item.timestamp??void 0,url:l.item.key,image:l.item.metadata?.image||void 0,metadata:l.item.metadata}));throw o.success===!1?new Error(o.error):new Error("Unknown error")}finally{this.unregisterRequest(t)}}async*searchStream(i,e){const t=this.generateRequestId(),s=new AbortController,r=e?.signal||s.signal;this.registerRequest(t,s);const n=await this.request({query:i,streaming:!0},"ai-search",r);if(!n.ok)throw new Error(`HTTP error! status: ${n.status}`);if(!n.body)throw new Error("Response body is empty");let o="";const l=n.body.getReader(),b=new TextDecoder;for(;;){const{done:g,value:M}=await l.read();if(g)break;const J=b.decode(M,{stream:!0});o+=J}yield{type:"result",id:"",title:"",description:o.replaceAll("data: ","").trim().split(`
++(function(p,h){typeof exports=="object"&&typeof module<"u"?h(exports):typeof define=="function"&&define.amd?define(["exports"],h):(p=typeof globalThis<"u"?globalThis:p||self,h(p.SearchSnippet={}))})(this,(function(p){"use strict";var Z=Object.defineProperty;var Q=(p,h,w)=>h in p?Z(p,h,{enumerable:!0,configurable:!0,writable:!0,value:w}):p[h]=w;var a=(p,h,w)=>Q(p,typeof h!="symbol"?h+"":h,w);const h=["Searching...","Digging through results...","Scanning the knowledge base...","Finding the best matches...","Sifting through the data...","Almost there...","Looking far and wide...","Connecting the dots...","Rummaging through pages...","Hunting down answers..."];function L(c,i){let e;function t(...s){clearTimeout(e),e=setTimeout(()=>{c(...s)},i)}return t.cancel=()=>clearTimeout(e),t}function d(c){const i=document.createElement("div");return i.textContent=c,i.innerHTML}function I(c){return new DOMParser().parseFromString(c,"text/html").documentElement.textContent||""}function O(c){const i=new Date(c),t=new Date().getTime()-i.getTime();if(t<6e4)return"Just now";if(t<36e5){const s=Math.floor(t/6e4);return`${s} ${s===1?"minute":"minutes"} ago`}if(t<864e5){const s=Math.floor(t/36e5);return`${s} ${s===1?"hour":"hours"} ago`}return i.toLocaleString(void 0,{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})}function z(c){return new Date(c).toLocaleDateString(void 0,{month:"short",day:"numeric"})}function T(c="id"){return`${c}-${Date.now()}-${Math.random().toString(36).substr(2,9)}`}function u(c,i){return c!==null?c:i}function m(c,i){return c===null?i:c==="true"||c===""}function x(c,i){if(c===null)return i;const e=Number.parseInt(c,10);return Number.isNaN(e)?i:e}function v(c,i){return new CustomEvent(c,{detail:i,bubbles:!0,composed:!0,cancelable:!0})}function k(c){if(!c)throw new Error("API URL is required");return new A(c)}class A{constructor(i){a(this,"activeRequests",new Map);a(this,"baseUrl");this.baseUrl=i.replace(/\/$/,"")}request(i={},e,t){const s=e==="search"?"snippet-search":"snippet-chat-completions";return fetch(`${this.baseUrl}/${e}`,{method:"POST",body:JSON.stringify({messages:[{role:"user",content:i.query}],stream:i.streaming,max_results:i.maxResults,...e==="search"&&{ai_search_options:{}}}),headers:{"Content-Type":"application/json","cf-ai-search-source":s},signal:t})}async search(i,e={}){const t=this.generateRequestId(),s=new AbortController,r=e.signal||s.signal;this.registerRequest(t,s);try{const n=await this.request({query:i,streaming:!1,maxResults:e.maxResults||30},"search",r);if(!n.ok)throw new Error(`HTTP error! status: ${n.status}`);if(!n.body)throw new Error("Response body is empty");const o=await n.json();if(o.success&&o.result)return o.result.chunks.map(l=>{const _t=l.text||"";const _tm=_t.match(/^TITLE:\\s*(.+?)(?:\\s+(?:SCRIPTURE|TOPICS|SERIES|URL):)/);const _um=_t.match(/URL:\\s*(https?:\\/\\/[^\\s]+)/);const _si=_t.search(/={5,}/);const _body=_si>-1?_t.slice(_si).replace(/^=+\\s*/,"").trim():_t;return{type:"result",id:l.id,title:_tm?.[1]?.trim()||I(l.item.metadata?.title)||l.item.key.replace(/__chunk_\\d+\\.txt$/,"").replace(/-/g," "),description:_body||(l.item.metadata?.description?I(l.item.metadata?.description):""),timestamp:l.item.timestamp??void 0,url:_um?.[1]||l.item.metadata?.url||l.item.key,image:l.item.metadata?.image||void 0,metadata:l.item.metadata}});throw o.success===!1?new Error(o.error):new Error("Unknown error")}finally{this.unregisterRequest(t)}}async*searchStream(i,e){const t=this.generateRequestId(),s=new AbortController,r=e?.signal||s.signal;this.registerRequest(t,s);const n=await this.request({query:i,streaming:!0},"ai-search",r);if(!n.ok)throw new Error(`HTTP error! status: ${n.status}`);if(!n.body)throw new Error("Response body is empty");let o="";const l=n.body.getReader(),b=new TextDecoder;for(;;){const{done:g,value:M}=await l.read();if(g)break;const J=b.decode(M,{stream:!0});o+=J}yield{type:"result",id:"",title:"",description:o.replaceAll("data: ","").trim().split(`
+ 
+ `).map(g=>JSON.parse(g)).map(g=>g.response).join(""),url:"",metadata:{}}}async*chat(i,e){const t=new AbortController,s=e?.signal||t.signal,r=await this.request({query:i,streaming:!1},"chat/completions",s);if(!r.ok)throw new Error(`HTTP error! status: ${r.status}`);if(!r.body)throw new Error("Response body is empty");yield{type:"text",message:(await r.json()).choices.map(o=>o.message.content).join("")}}cancelRequest(i){const e=this.activeRequests.get(i);e&&(e.controller.abort(),this.unregisterRequest(i))}cancelAllRequests(){for(const[i]of this.activeRequests)this.cancelRequest(i)}registerRequest(i,e){this.activeRequests.set(i,{id:i,controller:e,timestamp:Date.now()})}unregisterRequest(i){this.activeRequests.delete(i)}generateRequestId(){return`req-${Date.now()}-${Math.random().toString(36).substr(2,9)}`}}const C=`Powered by <a href="https://workers.cloudflare.com/product/ai-search" target="_blank" rel="noopener noreferrer">Cloudflare AI Search <svg width="32" height="10" viewBox="0 0 412 186" xmlns="http://www.w3.org/2000/svg" aria-label="Cloudflare" role="img">
+   <path fill="#f38020" d="m280.8395,183.31456c11,-26 -4,-38 -19,-38l-148,-2c-4,0 -4,-6 1,-7l150,-2c17,-1 37,-15 43,-33c0,0 10,-21 9,-24a97,97 0 0 0 -187,-11c-38,-25 -78,9 -69,46c-48,3 -65,46 -60,72c0,1 1,2 3,2l274,0c1,0 3,-1 3,-3z"/>
