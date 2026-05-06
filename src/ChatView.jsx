@@ -1,19 +1,28 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import Markdown from 'react-markdown'
 import './ChatView.css'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const STORAGE_KEY = 'cv_conversations'
 const SUMMARIZE_AFTER = 14   // total messages before triggering summary
 const KEEP_RECENT    = 8     // messages kept verbatim after summarization
 
 // ─── Storage helpers ──────────────────────────────────────────────────────────
 
-function loadConvs() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]') } catch { return [] }
+function getStorageKey(apiUrl) {
+  try {
+    const host = new URL(apiUrl).hostname
+    return `cv_conversations:${host}`
+  } catch {
+    return 'cv_conversations'
+  }
 }
-function saveConvs(convs) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(convs)) } catch {}
+
+function loadConvs(key) {
+  try { return JSON.parse(localStorage.getItem(key) || '[]') } catch { return [] }
+}
+function saveConvs(convs, key) {
+  try { localStorage.setItem(key, JSON.stringify(convs)) } catch { /* quota exceeded or private mode */ }
 }
 
 function newConv() {
@@ -68,7 +77,8 @@ function TypingDots() {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function ChatView({ apiUrl, matchThreshold, maxResults, contextExpansion, rewriteQuery, reRankResults }) {
-  const [convs,       setConvs]       = useState(loadConvs)
+  const storageKey  = useRef(getStorageKey(apiUrl)).current
+  const [convs,       setConvs]       = useState(() => loadConvs(storageKey))
   const [activeId,    setActiveId]    = useState(null)
   const [streaming,   setStreaming]   = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -85,6 +95,9 @@ export default function ChatView({ apiUrl, matchThreshold, maxResults, contextEx
   useEffect(() => {
     settingsRef.current = { matchThreshold, maxResults, contextExpansion, rewriteQuery, reRankResults }
   }, [matchThreshold, maxResults, contextExpansion, rewriteQuery, reRankResults])
+
+  // Auto-open a new chat on first load when there's no prior history
+  useEffect(() => { if (loadConvs(storageKey).length === 0) startNew() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Scroll to bottom on new messages / streaming updates
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) })
@@ -105,7 +118,7 @@ export default function ChatView({ apiUrl, matchThreshold, maxResults, contextEx
 
   function startNew() {
     const c = newConv()
-    setConvs(prev => { const u = [c, ...prev]; saveConvs(u); return u })
+    setConvs(prev => { const u = [c, ...prev]; saveConvs(u, storageKey); return u })
     setActiveId(c.id)
     setSidebarOpen(false)
     setError(null)
@@ -120,7 +133,7 @@ export default function ChatView({ apiUrl, matchThreshold, maxResults, contextEx
 
   function deleteConv(e, id) {
     e.stopPropagation()
-    setConvs(prev => { const u = prev.filter(c => c.id !== id); saveConvs(u); return u })
+    setConvs(prev => { const u = prev.filter(c => c.id !== id); saveConvs(u, storageKey); return u })
     if (activeId === id) setActiveId(null)
   }
 
@@ -155,7 +168,7 @@ export default function ChatView({ apiUrl, matchThreshold, maxResults, contextEx
     if (textareaRef.current) textareaRef.current.style.height = 'auto'
 
     // Work from a fresh load so we never read stale state in the async body
-    let allConvs = loadConvs()
+    let allConvs = loadConvs(storageKey)
     let conv     = allConvs.find(c => c.id === activeId)
     if (!conv) { setStreaming(false); return }
 
@@ -170,7 +183,7 @@ export default function ChatView({ apiUrl, matchThreshold, maxResults, contextEx
     }
 
     allConvs = allConvs.map(c => c.id === conv.id ? conv : c)
-    setConvs(allConvs); saveConvs(allConvs)
+    setConvs(allConvs); saveConvs(allConvs, storageKey)
 
     // ── Summarize if needed ──────────────────────────────────────────────────
     let summary = conv.summary
@@ -184,8 +197,8 @@ export default function ChatView({ apiUrl, matchThreshold, maxResults, contextEx
           summary      = newSummary
           conv.summary = summary
           conv.messages = conv.messages.slice(-(KEEP_RECENT + 2))
-          allConvs = loadConvs().map(c => c.id === conv.id ? conv : c)
-          setConvs(allConvs); saveConvs(allConvs)
+          allConvs = loadConvs(storageKey).map(c => c.id === conv.id ? conv : c)
+          setConvs(allConvs); saveConvs(allConvs, storageKey)
         }
       }
     }
@@ -274,13 +287,13 @@ export default function ChatView({ apiUrl, matchThreshold, maxResults, contextEx
         updatedAt: Date.now(),
         messages: c.messages.map(m => m.id === aiMsg.id ? { ...m, content: fullContent } : m),
       })
-      saveConvs(final)
+      saveConvs(final, storageKey)
       return final
     })
 
     abortRef.current = null
     setStreaming(false)
-  }, [activeId, streaming])
+  }, [activeId, streaming, storageKey])
 
   function handleStop() { abortRef.current?.abort() }
 
@@ -366,7 +379,10 @@ export default function ChatView({ apiUrl, matchThreshold, maxResults, contextEx
                 const showTyping = isLastAi && streaming && m.content === ''
                 return (
                   <div key={m.id} className={`cv-bubble cv-bubble--${m.role}`}>
-                    {showTyping ? <TypingDots /> : <span className="cv-bubble-text">{m.content}</span>}
+                    {showTyping ? <TypingDots /> : m.role === 'assistant'
+                      ? <div className="cv-bubble-text cv-bubble-md"><Markdown>{m.content}</Markdown></div>
+                      : <span className="cv-bubble-text">{m.content}</span>
+                    }
                   </div>
                 )
               })}

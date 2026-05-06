@@ -20,12 +20,18 @@ function formatDate(ts) {
   return new Date(ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
-function highlight(text, query) {
+function highlight(text, query, exact = false) {
   if (!query || !text) return text
-  const words = query.trim().split(/\s+/).filter(w => w.length > 1)
-  if (words.length === 0) return text
-  const escaped = words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
-  const re = new RegExp(`(${escaped.join('|')})`, 'gi')
+  let re
+  if (exact) {
+    const escaped = query.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    re = new RegExp(`\\b(${escaped})\\b`, 'gi')
+  } else {
+    const words = query.trim().split(/\s+/).filter(w => w.length > 1)
+    if (words.length === 0) return text
+    const escaped = words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    re = new RegExp(`\\b(${escaped.join('|')})\\b`, 'gi')
+  }
   const parts = text.split(re)
   // split() with a capturing group puts matches at odd indices
   return parts.map((part, i) =>
@@ -42,6 +48,7 @@ export default function SearchResults({ apiUrl }) {
   const [selected, setSelected] = useState(null)
   const [total, setTotal] = useState(null)
   const [highlightOn, setHighlightOn] = useState(true)
+  const [exactMatch, setExactMatch] = useState(false)
 
   async function doSearch(q) {
     if (!q.trim()) return
@@ -124,7 +131,7 @@ export default function SearchResults({ apiUrl }) {
               <div className="sr-card-body">
                 {highlight(
                   (r.body?.slice(0, 220) ?? '') + ((r.body?.length ?? 0) > 220 ? '…' : ''),
-                  searchedQuery
+                  searchedQuery, exactMatch
                 )}
               </div>
             </button>
@@ -166,6 +173,18 @@ export default function SearchResults({ apiUrl }) {
                   </svg>
                   Highlight
                 </button>
+                <button
+                  className={`sr-highlight-toggle${exactMatch ? ' active' : ''}`}
+                  onClick={() => setExactMatch(e => !e)}
+                  disabled={!highlightOn}
+                  aria-label="Toggle exact match"
+                  title={exactMatch ? 'Switch to word highlighting' : 'Highlight exact phrase only'}
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M3 21l1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"/>
+                  </svg>
+                  Exact
+                </button>
                 <button className="sr-overlay-close" onClick={() => setSelected(null)} aria-label="Close">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M18 6 6 18M6 6l12 12" />
@@ -173,7 +192,7 @@ export default function SearchResults({ apiUrl }) {
                 </button>
               </div>
             </div>
-            <div className="sr-overlay-body">{highlightOn ? highlight(selected.body, searchedQuery) : selected.body}</div>
+            <div className="sr-overlay-body">{highlightOn ? highlight(selected.body, searchedQuery, exactMatch) : selected.body}</div>
           </div>
         </div>
       )}

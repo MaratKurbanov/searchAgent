@@ -258,6 +258,66 @@
   white-space: pre-wrap;
 }
 
+.cv-bubble-md {
+  white-space: normal;
+}
+
+.cv-bubble-md > :first-child { margin-top: 0; }
+.cv-bubble-md > :last-child  { margin-bottom: 0; }
+
+.cv-bubble-md p  { margin: 0 0 0.6em; }
+.cv-bubble-md h1,
+.cv-bubble-md h2,
+.cv-bubble-md h3,
+.cv-bubble-md h4 { margin: 0.8em 0 0.3em; font-weight: 700; line-height: 1.3; }
+.cv-bubble-md h1 { font-size: 1.2em; }
+.cv-bubble-md h2 { font-size: 1.1em; }
+.cv-bubble-md h3,
+.cv-bubble-md h4 { font-size: 1em; }
+.cv-bubble-md ul,
+.cv-bubble-md ol { margin: 0.4em 0 0.6em; padding-left: 1.4em; }
+.cv-bubble-md li { margin: 0.2em 0; }
+.cv-bubble-md strong { font-weight: 700; }
+.cv-bubble-md em { font-style: italic; }
+.cv-bubble-md code {
+  font-family: ui-monospace, monospace;
+  font-size: 0.88em;
+  background: rgba(0,0,0,0.08);
+  border-radius: 3px;
+  padding: 1px 4px;
+}
+.cv-bubble-md pre {
+  background: rgba(0,0,0,0.08);
+  border-radius: 6px;
+  padding: 10px 12px;
+  overflow-x: auto;
+  margin: 0.5em 0;
+}
+.cv-bubble-md pre code {
+  background: none;
+  padding: 0;
+  font-size: 0.85em;
+}
+.cv-bubble-md a {
+  color: inherit;
+  text-decoration: underline;
+  opacity: 0.85;
+}
+.cv-bubble-md a:hover { opacity: 1; }
+.cv-bubble-md blockquote {
+  border-left: 3px solid currentColor;
+  margin: 0.5em 0;
+  padding-left: 0.8em;
+  opacity: 0.75;
+}
+
+@media (prefers-color-scheme: dark) {
+  .cv-bubble-md code,
+  .cv-bubble-md pre {
+    background: rgba(255,255,255,0.1);
+  }
+}
+
 /* ── Typing indicator ───────────────────────────────────────────────────────── */
 
 .cv-typing {

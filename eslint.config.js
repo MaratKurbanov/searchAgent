@@ -7,9 +7,10 @@ import { defineConfig, globalIgnores } from 'eslint/config'
 export default defineConfig([
   globalIgnores(['dist', 'node_modules', 'public', '.wrangler']),
   {
-    files: ['vite.config.js'],
+    files: ['vite.config.js', 'chat-test.js'],
     languageOptions: {
       globals: { ...globals.browser, ...globals.node },
+      sourceType: 'commonjs',
     },
   },
   {
