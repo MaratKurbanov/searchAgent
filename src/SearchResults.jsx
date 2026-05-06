@@ -41,6 +41,7 @@ export default function SearchResults({ apiUrl }) {
   const [error, setError] = useState(null)
   const [selected, setSelected] = useState(null)
   const [total, setTotal] = useState(null)
+  const [highlightOn, setHighlightOn] = useState(true)
 
   async function doSearch(q) {
     if (!q.trim()) return
@@ -152,13 +153,27 @@ export default function SearchResults({ apiUrl }) {
                   <div className="sr-overlay-date">{formatDate(selected.timestamp)}</div>
                 )}
               </div>
-              <button className="sr-overlay-close" onClick={() => setSelected(null)} aria-label="Close">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M18 6 6 18M6 6l12 12" />
-                </svg>
-              </button>
+              <div className="sr-overlay-actions">
+                <button
+                  className={`sr-highlight-toggle${highlightOn ? ' active' : ''}`}
+                  onClick={() => setHighlightOn(h => !h)}
+                  aria-label="Toggle highlight"
+                  title={highlightOn ? 'Turn off highlighting' : 'Turn on highlighting'}
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                  Highlight
+                </button>
+                <button className="sr-overlay-close" onClick={() => setSelected(null)} aria-label="Close">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M18 6 6 18M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
-            <div className="sr-overlay-body">{highlight(selected.body, searchedQuery)}</div>
+            <div className="sr-overlay-body">{highlightOn ? highlight(selected.body, searchedQuery) : selected.body}</div>
           </div>
         </div>
       )}
