@@ -55,7 +55,8 @@
       "Bash(xargs kill *)",
       "Skill(update-config)",
       "Bash(npx patch-package *)",
-      "Bash(grep -o \"result\\\\.chunks\\\\.map.\\\\{0,500\\\\}\" /Users/maratkurbanov/Documents/work/cloudflare/searchAgent/node_modules/@cloudflare/ai-search-snippet/dist/search-snippet.umd.js)"
+      "Bash(grep -o \"result\\\\.chunks\\\\.map.\\\\{0,500\\\\}\" /Users/maratkurbanov/Documents/work/cloudflare/searchAgent/node_modules/@cloudflare/ai-search-snippet/dist/search-snippet.umd.js)",
+      "mcp__playwright__browser_wait_for"
     ]
   }
 }

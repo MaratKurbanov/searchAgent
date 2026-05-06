@@ -68,24 +68,20 @@ export default function App() {
           </button>
         </div>
 
-        {activeTab === 'search' && (
-          <div className="search-bar-wrapper">
-            <SearchBarWrapper apiUrl={API_URL} />
-          </div>
-        )}
+        <div className="search-bar-wrapper" hidden={activeTab !== 'search'}>
+          <SearchBarWrapper apiUrl={API_URL} />
+        </div>
 
-        {activeTab === 'chat' && (
-          <div className="chat-wrapper">
-            <ChatPageWrapper
-              apiUrl={API_URL}
-              matchThreshold={matchThreshold}
-              maxResults={maxResults}
-              contextExpansion={contextExpansion}
-              rewriteQuery={rewriteQuery}
-              reRankResults={reRankResults}
-            />
-          </div>
-        )}
+        <div className="chat-wrapper" hidden={activeTab !== 'chat'}>
+          <ChatPageWrapper
+            apiUrl={API_URL}
+            matchThreshold={matchThreshold}
+            maxResults={maxResults}
+            contextExpansion={contextExpansion}
+            rewriteQuery={rewriteQuery}
+            reRankResults={reRankResults}
+          />
+        </div>
       </main>
     </div>
   )
