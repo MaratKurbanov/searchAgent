@@ -195,6 +195,7 @@
   font-weight: 600;
   color: var(--text-color);
   margin: 0;
+  pointer-events: none;
 }
 
 /* Tab bar */
