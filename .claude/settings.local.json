@@ -65,5 +65,9 @@
       "Bash(sed -n '1,5p' /Users/maratkurbanov/Documents/work/cloudflare/searchAgent/chat-test.js)",
       "Bash(sed -n '158,163p' /Users/maratkurbanov/Documents/work/cloudflare/searchAgent/chat-test.js)"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "hadis",
+    "keller"
+  ]
 }

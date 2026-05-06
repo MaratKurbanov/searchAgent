@@ -309,41 +309,43 @@
   }
 
   .side-panel {
-    width: 100%;
-    border-right: none;
-    border-bottom: 1px solid var(--border-color);
-    max-height: 200px;
-    flex-direction: row;
-    overflow-x: auto;
-    overflow-y: hidden;
-    gap: 32px;
-    padding: 16px;
+    width: 260px;
+    height: 100dvh;
+    border-right: 1px solid var(--border-color);
+    border-bottom: none;
+    max-height: none;
+    flex-direction: column;
+    overflow-x: hidden;
+    overflow-y: auto;
+    gap: 20px;
+    padding: 20px;
     position: fixed;
     top: 0;
     left: 0;
-    right: 0;
+    bottom: 0;
+    right: auto;
     z-index: 50;
-    transform: translateY(-100%);
+    transform: translateX(-100%);
   }
 
   .side-panel.open {
-    transform: translateY(0);
+    transform: translateX(0);
   }
 
   .side-panel.closed {
-    transform: translateY(-100%);
+    transform: translateX(-100%);
   }
 
   .panel-header {
-    min-width: fit-content;
-    border-bottom: none;
-    border-right: 1px solid var(--border-color);
-    padding-right: 16px;
-    padding-bottom: 0;
+    min-width: unset;
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+    padding-right: 0;
+    padding-bottom: 16px;
   }
 
   .settings-group {
-    min-width: 150px;
+    min-width: unset;
   }
 
   .main-content {
@@ -382,8 +384,8 @@
   .settings-toggle {
     position: fixed;
     left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
+    top: 20px;
+    transform: none;
     width: 40px;
     height: 40px;
     z-index: 101;
@@ -393,5 +395,9 @@
   .settings-toggle svg {
     width: 20px;
     height: 20px;
+  }
+
+  .site-name {
+    display: none;
   }
 }
