@@ -120,7 +120,13 @@ export default {
             const parsed = JSON.parse(searchBody)
             // handle both response shapes: new {chunks:[]} and old {data:[{content:[{text}]}]}
             const chunks = parsed.chunks ?? parsed.data ?? []
-            context = chunks.map(c => c.text ?? c.content?.[0]?.text).filter(Boolean).join('\n\n---\n\n')
+            context = chunks.map(c => {
+              const text = c.text ?? c.content?.[0]?.text ?? ''
+              const title = c.item?.key ?? c.filename ?? ''
+              const url = c.attributes?.url ?? c.item?.attributes?.url ?? ''
+              const header = [title && `Title: ${title}`, url && `URL: ${url}`].filter(Boolean).join(' | ')
+              return header ? `[${header}]\n${text}` : text
+            }).filter(c => c.trim()).join('\n\n---\n\n')
           } else {
             console.error(`AI Search /search failed: ${searchRes.status}`, searchBody)
           }
