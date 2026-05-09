@@ -70,6 +70,29 @@ export default {
       })
     }
 
+    // OpenAI proxy — keeps the API key server-side
+    if (pathname === '/api/chat/completions' && request.method === 'POST') {
+      if (!env.OPENAI_API_KEY) {
+        return new Response(JSON.stringify({ error: 'OPENAI_API_KEY not configured' }), {
+          status: 500, headers: { 'Content-Type': 'application/json' },
+        })
+      }
+      const { ai_search_options, max_results, ...body } = await request.json()
+      const model = env.OPENAI_MODEL || 'gpt-4o'
+      const upstream = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${env.OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify({ model, ...body }),
+      })
+      return new Response(upstream.body, {
+        status: upstream.status,
+        headers: { 'Content-Type': upstream.headers.get('Content-Type') || 'text/event-stream' },
+      })
+    }
+
     // Skip auth on localhost
     const isLocalhost = url.hostname === 'localhost' || url.hostname === '127.0.0.1'
 

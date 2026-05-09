@@ -17,6 +17,9 @@ public
 .wrangler/
 wrangler.env
 
+# Local env (contains secrets)
+.env
+
 # Playwright MCP artifacts
 .playwright-mcp/
 

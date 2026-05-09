@@ -142,12 +142,12 @@ export default function ChatView({ apiUrl, matchThreshold, maxResults, contextEx
   async function summarize(msgs) {
     const transcript = msgs.map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`).join('\n')
     try {
-      const res = await fetch(`${apiUrlRef.current.replace(/\/$/, '')}/chat/completions`, {
+      const res = await fetch('/api/chat/completions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'cf-ai-search-source': 'snippet-chat-completions' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: [{ role: 'user', content: `Summarize this conversation in 3–5 sentences, preserving all key facts and context:\n\n${transcript}` }],
-          stream: false, max_results: 1,
+          stream: false,
         }),
       })
       if (!res.ok) return null
@@ -215,18 +215,9 @@ export default function ChatView({ apiUrl, matchThreshold, maxResults, contextEx
       : history
 
     // ── Fetch ────────────────────────────────────────────────────────────────
-    const s   = settingsRef.current
-    const url = `${apiUrlRef.current.replace(/\/$/, '')}/chat/completions`
     const body = JSON.stringify({
       messages: apiMessages,
       stream: true,
-      max_results: s.maxResults ?? 10,
-      ai_search_options: {
-        match_threshold:  s.matchThreshold,
-        context_expansion: s.contextExpansion,
-        rewrite_query:    s.rewriteQuery,
-        re_rank_results:  s.reRankResults,
-      },
     })
 
     const controller = new AbortController()
@@ -234,9 +225,9 @@ export default function ChatView({ apiUrl, matchThreshold, maxResults, contextEx
     let fullContent  = ''
 
     try {
-      const res = await fetch(url, {
+      const res = await fetch('/api/chat/completions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'cf-ai-search-source': 'snippet-chat-completions' },
+        headers: { 'Content-Type': 'application/json' },
         body,
         signal: controller.signal,
       })
@@ -266,9 +257,9 @@ export default function ChatView({ apiUrl, matchThreshold, maxResults, contextEx
 
       // Non-streaming fallback
       if (!fullContent) {
-        const r2 = await fetch(url, {
+        const r2 = await fetch('/api/chat/completions', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'cf-ai-search-source': 'snippet-chat-completions' },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ ...JSON.parse(body), stream: false }),
         })
         if (r2.ok) {

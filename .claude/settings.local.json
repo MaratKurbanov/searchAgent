@@ -68,7 +68,10 @@
       "Bash(grep -o 'qe\\\\{3,\\\\}' /Users/maratkurbanov/Documents/work/cloudflare/searchAgent/public/assets/full-sermons/becoming-clean.txt)",
       "Bash(git config *)",
       "Bash(git push *)",
-      "mcp__claude_ai_Cloudflare_Developer_Platform__search_cloudflare_documentation"
+      "mcp__claude_ai_Cloudflare_Developer_Platform__search_cloudflare_documentation",
+      "Bash(git -C /Users/maratkurbanov/Documents/work/cloudflare/searchAgent add src/SearchResults.jsx src/SearchResults.css src/SermonList.jsx)",
+      "Bash(git -C /Users/maratkurbanov/Documents/work/cloudflare/searchAgent commit -m ' *)",
+      "Bash(git -C /Users/maratkurbanov/Documents/work/cloudflare/searchAgent push origin main)"
     ]
   },
   "enabledMcpjsonServers": [
