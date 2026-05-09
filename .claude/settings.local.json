@@ -71,7 +71,9 @@
       "mcp__claude_ai_Cloudflare_Developer_Platform__search_cloudflare_documentation",
       "Bash(git -C /Users/maratkurbanov/Documents/work/cloudflare/searchAgent add src/SearchResults.jsx src/SearchResults.css src/SermonList.jsx)",
       "Bash(git -C /Users/maratkurbanov/Documents/work/cloudflare/searchAgent commit -m ' *)",
-      "Bash(git -C /Users/maratkurbanov/Documents/work/cloudflare/searchAgent push origin main)"
+      "Bash(git -C /Users/maratkurbanov/Documents/work/cloudflare/searchAgent push origin main)",
+      "Bash(git rm *)",
+      "Bash(git commit *)"
     ]
   },
   "enabledMcpjsonServers": [
