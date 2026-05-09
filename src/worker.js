@@ -70,14 +70,37 @@ export default {
       })
     }
 
-    // OpenAI proxy — keeps the API key server-side
+    // RAG + OpenAI proxy — retrieve from CF AI Search, generate with OpenAI
     if (pathname === '/api/chat/completions' && request.method === 'POST') {
       if (!env.OPENAI_API_KEY) {
         return new Response(JSON.stringify({ error: 'OPENAI_API_KEY not configured' }), {
           status: 500, headers: { 'Content-Type': 'application/json' },
         })
       }
-      const { ai_search_options, max_results, ...body } = await request.json()
+
+      const { messages, stream } = await request.json()
+
+      // Step 1: retrieve relevant chunks from the AI Search index
+      let context = ''
+      if (env.API_URL) {
+        try {
+          const searchRes = await fetch(`${env.API_URL.replace(/\/$/, '')}/search`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ messages }),
+          })
+          if (searchRes.ok) {
+            const { chunks = [] } = await searchRes.json()
+            context = chunks.map(c => c.text).filter(Boolean).join('\n\n---\n\n')
+          }
+        } catch (_) { /* proceed without context if search fails */ }
+      }
+
+      // Step 2: inject retrieved context as a system message
+      const enrichedMessages = context
+        ? [{ role: 'system', content: `Answer based on the following source material. If the answer is not in the sources, say so.\n\n${context}` }, ...messages]
+        : messages
+
       const model = env.OPENAI_MODEL || 'gpt-4o'
       const upstream = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -85,8 +108,9 @@ export default {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${env.OPENAI_API_KEY}`,
         },
-        body: JSON.stringify({ model, ...body }),
+        body: JSON.stringify({ model, messages: enrichedMessages, stream }),
       })
+
       return new Response(upstream.body, {
         status: upstream.status,
         headers: { 'Content-Type': upstream.headers.get('Content-Type') || 'text/event-stream' },
