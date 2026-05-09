@@ -291,6 +291,18 @@
   }
 }
 
+.sr-overlay-panel.fullscreen {
+  max-width: 100%;
+  width: 100%;
+  max-height: 100dvh;
+  height: 100dvh;
+  border-radius: 0;
+}
+
+.sr-overlay--fullscreen {
+  padding: 0;
+}
+
 @media (max-width: 600px) {
   .sr-overlay {
     padding: 12px;
@@ -309,6 +321,7 @@
   }
 
   .sr-overlay-actions {
+    width: 100%;
     justify-content: flex-start;
   }
 
