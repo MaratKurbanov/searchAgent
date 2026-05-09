@@ -71,23 +71,13 @@ preview_urls = false
 [env.keller.vars]
 SITE_NAME = "Tim Keller"
 API_URL = "https://39aacfde-5cd3-47e4-91f4-8a1295082da4.search.ai.cloudflare.com/"
+SERMON_BASE_URL = "https://gospelinlife.com/sermon/"
 CLOUDFLARE_ACCESS_AUD = "f189d9a0e6304c25e2e58f56d530cfb3a4a38ac803608d17c9d39453d6c0beea"
 CLOUDFLARE_ACCESS_JWKS_URL = "https://maratkurbanov.cloudflareaccess.com/cdn-cgi/access/certs"
 ENVIRONMENT = "production"
 LOG_LEVEL = "warn"
-OPENAI_MODEL = "gpt-4o-mini"
-SYSTEM_PROMPT = """
-  You are an expert on all Tim Keller's sermons. You have access to all his sermons.
-  Answer questions only based on the source material provided to you — do not use your own knowledge of the topic.
-  If you can answer the question, include a References section listing only the sermons the answer actually came from.
-  Each reference must be a markdown hyperlink using the url from the source metadata like this: [Sermon Title](URL)
-  If no source material is relevant, say so — do not invent references.
-
-  References format example (use real titles and urls from the sources, not these placeholders):
-  References:
-    * [Sermon Title A](https://gospelinlife.com/sermon/file-title-a)
-    * [Sermon Title B](https://gospelinlife.com/sermon/file-title-b)
-  """
+OPENAI_MODEL = "gpt-5.4-2026-03-05"
+SYSTEM_PROMPT = "You are an expert on Tim Keller's sermons. Answer only from the source material provided — do not use outside knowledge. If relevant sources exist, end with a References section of markdown links using the title and URL from each source. If no sources are relevant, say so."
 
 [env.keller.ai]
 binding = "AI"

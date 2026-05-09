@@ -23,8 +23,9 @@ export default function SermonList() {
 
   const filtered = useMemo(() => {
     if (!filter.trim()) return sermons
-    const q = filter.toLowerCase()
-    return sermons.filter(s => s.title.toLowerCase().includes(q))
+    const normalize = str => str.replace(/[‘’ʼ]/g, "'").toLowerCase()
+    const q = normalize(filter)
+    return sermons.filter(s => normalize(s.title).includes(q))
   }, [sermons, filter])
 
   async function openSermon(sermon) {

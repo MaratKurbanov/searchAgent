@@ -12,7 +12,21 @@ function parseChunk(chunk) {
     chunk.item?.metadata?.title ||
     chunk.item?.key?.replace(/__chunk_\d+\.txt$/, '').replace(/-/g, ' ')
   const url = urlMatch?.[1] || chunk.item?.metadata?.url || null
-  return { title, url, body, timestamp: chunk.item?.timestamp ?? null }
+  const sd = chunk.scoring_details ?? null
+  return { title, url, body, timestamp: chunk.item?.timestamp ?? null, score: chunk.score ?? null, scoringDetails: sd }
+}
+
+function formatScore(r) {
+  if (!r.score && !r.scoringDetails) return null
+  const parts = []
+  if (r.score != null) parts.push(r.score.toFixed(3))
+  const sd = r.scoringDetails
+  if (sd) {
+    if (sd.vector_score != null) parts.push(`v:${sd.vector_score.toFixed(3)}`)
+    if (sd.keyword_score != null) parts.push(`k:${sd.keyword_score.toFixed(1)}`)
+    if (sd.fusion_method) parts.push(sd.fusion_method)
+  }
+  return parts.join(' · ')
 }
 
 function formatDate(ts) {
@@ -58,21 +72,20 @@ export default function SearchResults({ apiUrl }) {
     setResults([])
     setTotal(null)
     try {
-      const res = await fetch(`${apiUrl.replace(/\/$/, '')}/search`, {
+      const searchUrl = `${apiUrl.replace(/\/$/, '')}/search`
+      const body = { messages: [{ role: 'user', content: q }], stream: false, max_results: 10, ai_search_options: {} }
+      console.log('[Search → AI Search] url:', searchUrl, '| body:', JSON.stringify(body))
+      const res = await fetch(searchUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'cf-ai-search-source': 'snippet-search',
         },
-        body: JSON.stringify({
-          messages: [{ role: 'user', content: q }],
-          stream: false,
-          max_results: 10,
-          ai_search_options: {},
-        }),
+        body: JSON.stringify(body),
       })
       if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`)
       const data = await res.json()
+      console.log('[Search ← AI Search] response:', JSON.stringify(data))
       if (data.success && data.result) {
         setResults(data.result.chunks.map(parseChunk))
         setTotal(data.result.chunks.length)
@@ -126,9 +139,11 @@ export default function SearchResults({ apiUrl }) {
         <div className="sr-list">
           {results.map((r, i) => (
             <button key={i} className="sr-card" onClick={() => setSelected(r)}>
-              <div className="sr-card-title">{r.title || 'Untitled'}</div>
+              <div className="sr-card-title-row">
+                <span className="sr-card-title">{r.title || 'Untitled'}</span>
+                {formatScore(r) && <span className="sr-score-badge">{formatScore(r)}</span>}
+              </div>
               {r.url && <div className="sr-card-url">{r.url}</div>}
-              {r.timestamp && <div className="sr-card-date">{formatDate(r.timestamp)}</div>}
               <div className="sr-card-body">
                 {highlight(
                   (r.body?.slice(0, 220) ?? '') + ((r.body?.length ?? 0) > 220 ? '…' : ''),
@@ -156,9 +171,6 @@ export default function SearchResults({ apiUrl }) {
                   >
                     {selected.url}
                   </a>
-                )}
-                {selected.timestamp && (
-                  <div className="sr-overlay-date">{formatDate(selected.timestamp)}</div>
                 )}
               </div>
               <div className="sr-overlay-actions">

@@ -215,9 +215,20 @@ export default function ChatView({ apiUrl, matchThreshold, maxResults, contextEx
       : history
 
     // ── Fetch ────────────────────────────────────────────────────────────────
+    const { matchThreshold, maxResults, rewriteQuery, reRankResults } = settingsRef.current
     const body = JSON.stringify({
       messages: apiMessages,
       stream: true,
+      rewrite_query: rewriteQuery,
+      ai_search_options: {
+        retrieval: {
+          match_threshold: matchThreshold,
+          max_num_results: maxResults,
+        },
+        reranking: {
+          enabled: reRankResults,
+        },
+      },
     })
 
     const controller = new AbortController()

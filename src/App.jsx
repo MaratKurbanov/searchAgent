@@ -62,6 +62,12 @@ export default function App() {
             Search
           </button>
           <button
+            className={`tab-button${activeTab === 'chat' ? ' active' : ''}`}
+            onClick={() => setActiveTab('chat')}
+          >
+            Chat
+          </button>
+          <button
             className={`tab-button${activeTab === 'read' ? ' active' : ''}`}
             onClick={() => setActiveTab('read')}
           >

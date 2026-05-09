@@ -90,7 +90,7 @@ export default {
         })
       }
 
-      const { messages, stream } = await request.json()
+      const { messages, stream, rewrite_query = false, ai_search_options = {} } = await request.json()
       const model = env.OPENAI_MODEL || 'gpt-4o'
       const authHeader = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${env.OPENAI_API_KEY}` }
 
@@ -98,24 +98,27 @@ export default {
       const fallbackQuery = messages.at(-1)?.content ?? ''
       let searchQueries = [fallbackQuery]
       try {
+        const queryGenPayload = {
+          model,
+          stream: false,
+          response_format: { type: 'json_object' },
+          messages: [
+            {
+              role: 'system',
+              content: 'Generate 3 diverse search queries for a semantic vector database based on the user\'s question. Use different phrasings, synonyms, and angles (e.g. theological terms, plain language, related concepts) to maximize recall. Return JSON: {"queries": ["...", "...", "..."]}',
+            },
+            ...messages,
+          ],
+        }
+        // console.log('[LLM → query-gen] sent:', JSON.stringify(queryGenPayload))
         const extractRes = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
           headers: authHeader,
-          body: JSON.stringify({
-            model,
-            stream: false,
-            response_format: { type: 'json_object' },
-            messages: [
-              {
-                role: 'system',
-                content: 'Generate 3 diverse search queries for a semantic vector database based on the user\'s question. Use different phrasings, synonyms, and angles (e.g. theological terms, plain language, related concepts) to maximize recall. Return JSON: {"queries": ["...", "...", "..."]}',
-              },
-              ...messages,
-            ],
-          }),
+          body: JSON.stringify(queryGenPayload),
         })
         if (extractRes.ok) {
           const data = await extractRes.json()
+          // console.log('[LLM ← query-gen] received:', JSON.stringify(data))
           const parsed = JSON.parse(data.choices?.[0]?.message?.content ?? '{}')
           if (Array.isArray(parsed.queries) && parsed.queries.length) {
             searchQueries = parsed.queries
@@ -129,18 +132,22 @@ export default {
         try {
           const searchUrl = `${env.API_URL.replace(/\/$/, '')}/search`
           const results = await Promise.all(
-            searchQueries.map(q =>
-              fetch(searchUrl, {
+            searchQueries.map(q => {
+              const searchBody = { messages: [{ role: 'user', content: q }], stream: false, rewrite_query, ai_search_options }
+              // console.log(`[RAG → search] query: ${JSON.stringify(q)} | body:`, JSON.stringify(searchBody))
+              return fetch(searchUrl, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ messages: [{ role: 'user', content: q }] }),
-              }).then(r => r.ok ? r.json() : r.text().then(t => { console.error(`AI Search failed: ${r.status}`, t); return {} }))
-                .catch(e => { console.error('AI Search error:', e.message); return {} })
-            )
+                headers: { 'Content-Type': 'application/json', 'cf-ai-search-source': 'snippet-search' },
+                body: JSON.stringify(searchBody),
+              })
+                .then(r => r.ok ? r.json() : r.text().then(t => { /* console.error(`AI Search failed: ${r.status}`, t); */ return {} }))
+                .then(data => { /* console.log(`[RAG ← search] query: ${JSON.stringify(q)} | response:`, JSON.stringify(data)); */ return data })
+                .catch(e => { /* console.error('AI Search error:', e.message); */ return {} })
+            })
           )
 
           const seen = new Set()
-          const chunks = results.flatMap(r => r.chunks ?? r.data ?? []).filter(c => {
+          const chunks = results.flatMap(r => r.result?.chunks ?? r.chunks ?? r.data ?? []).filter(c => {
             const text = c.text ?? c.content?.[0]?.text ?? ''
             if (!text.trim() || seen.has(text)) return false
             seen.add(text)
@@ -150,29 +157,60 @@ export default {
           context = chunks.map(c => {
             const text = c.text ?? c.content?.[0]?.text ?? ''
             const title = c.item?.key ?? c.filename ?? ''
-            const url = c.attributes?.url ?? c.item?.attributes?.url ?? ''
+            const slug = (c.item?.key ?? c.filename ?? '').replace(/__chunk_\d+\.txt$/, '').replace(/\.txt$/, '')
+            const url = c.attributes?.url ?? c.item?.attributes?.url ?? c.item?.metadata?.url
+                     ?? (env.SERMON_BASE_URL && slug ? `${env.SERMON_BASE_URL}${slug}/` : '')
             const header = [title && `Title: ${title}`, url && `URL: ${url}`].filter(Boolean).join(' | ')
             return header ? `[${header}]\n${text}` : text
           }).join('\n\n---\n\n')
+          // console.log(`[RAG] ${chunks.length} deduplicated chunks across ${searchQueries.length} queries`)
+          // console.log('[RAG] context:\n', context)
         } catch (e) {
-          console.error('AI Search error:', e.message)
+          // console.error('AI Search error:', e.message)
         }
       }
 
       // Step 3: generate the answer using the retrieved context + full conversation
+      // Guard: if RAG returned nothing, don't call the LLM — it will hallucinate citations.
+      if (!context) {
+        // console.log('[answer] no RAG context — returning no-results response without calling LLM')
+        const noResultsBody = JSON.stringify({
+          choices: [{ message: { role: 'assistant', content: 'I couldn\'t find any relevant sermons in the library for that question.' } }],
+        })
+        if (stream) {
+          const sseBody = `data: ${JSON.stringify({ choices: [{ delta: { content: 'I couldn\'t find any relevant sermons in the library for that question.' } }] })}\n\ndata: [DONE]\n\n`
+          return new Response(sseBody, { headers: { 'Content-Type': 'text/event-stream' } })
+        }
+        return new Response(noResultsBody, { headers: { 'Content-Type': 'application/json' } })
+      }
+
+      // env.SYSTEM_PROMPT is passed verbatim — no LLM touches it before this point
       const systemParts = []
       if (env.SYSTEM_PROMPT) systemParts.push(env.SYSTEM_PROMPT)
+      if (context) systemParts.push(`Use the following source material to answer the user's question. Cite relevant parts. If the answer isn't in the sources, say so rather than guessing.\n\n${context}`)
 
       const enrichedMessages = systemParts.length
         ? [{ role: 'system', content: systemParts.join('\n\n') }, ...messages]
         : messages
 
+      const answerPayload = { model, messages: enrichedMessages, stream }
+      // console.log('[LLM → answer] sent:', JSON.stringify(answerPayload))
       const upstream = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: authHeader,
-        body: JSON.stringify({ model, messages: enrichedMessages, stream }),
+        body: JSON.stringify(answerPayload),
       })
 
+      if (!stream) {
+        const data = await upstream.json()
+        // console.log('[LLM ← answer] received:', JSON.stringify(data))
+        return new Response(JSON.stringify(data), {
+          status: upstream.status,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      }
+
+      // console.log('[LLM ← answer] streaming response started, status:', upstream.status)
       return new Response(upstream.body, {
         status: upstream.status,
         headers: { 'Content-Type': upstream.headers.get('Content-Type') || 'text/event-stream' },

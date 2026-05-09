@@ -141,6 +141,23 @@ wrangler deploy --env hadis
    wrangler deploy --env newname
    ```
 
+## Search Result Score Badge
+
+Each search result card shows a one-line score badge in the top-right corner, e.g.:
+
+```
+0.999 · v:0.550 · k:59.8 · rrf
+```
+
+| Field | Meaning |
+|---|---|
+| `0.999` | Final ranking score for this chunk (after reranking if enabled; otherwise the fusion score). Higher = better match. Range 0–1. |
+| `v:0.550` | Vector (semantic) similarity score — cosine similarity between the query embedding and the chunk embedding. Range 0–1. |
+| `k:59.8` | Keyword (BM25) score — traditional full-text relevance score. Scale is unbounded; higher = more keyword overlap. |
+| `rrf` | Fusion method used to combine vector and keyword scores. `rrf` = Reciprocal Rank Fusion (default); `max` = take the higher of the two scores. |
+
+The badge is only shown when the AI Search response includes `scoring_details` on the chunk (returned for hybrid search). It is hidden when scoring details are absent.
+
 ## npm Package Patches
 
 `@cloudflare/ai-search-snippet` is patched via `patch-package` (applied automatically on `npm install`):

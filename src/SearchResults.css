@@ -113,10 +113,25 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
+.sr-card-title-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .sr-card-title {
   font-size: 15px;
   font-weight: 600;
   color: var(--text-color);
+}
+
+.sr-score-badge {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-family: ui-monospace, monospace;
+  color: var(--text-secondary);
+  white-space: nowrap;
 }
 
 .sr-card-title::first-letter {
