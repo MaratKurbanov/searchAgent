@@ -85,8 +85,8 @@ SYSTEM_PROMPT = """
 
   References format example (use real titles and urls from the sources, not these placeholders):
   References:
-    * [Sermon Title A](https://example.com/sermon-a)
-    * [Sermon Title B](https://example.com/sermon-b)
+    * [Sermon Title A](https://gospelinlife.com/sermon/file-title-a)
+    * [Sermon Title B](https://gospelinlife.com/sermon/file-title-b)
   """
 
 [env.keller.ai]

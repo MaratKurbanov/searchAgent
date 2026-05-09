@@ -70,6 +70,18 @@ export default {
       })
     }
 
+    // Auth — skip on localhost, validate Cloudflare Access JWT everywhere else
+    const isLocalhost = url.hostname === 'localhost' || url.hostname === '127.0.0.1'
+    if (!isLocalhost) {
+      const accessValidation = await validateAccessJWT(request, env)
+      if (!accessValidation.valid) {
+        return new Response(
+          JSON.stringify({ error: 'Unauthorized', message: accessValidation.error }, null, 2),
+          { status: 401, headers: { 'Content-Type': 'application/json' } }
+        )
+      }
+    }
+
     // RAG + OpenAI proxy — 3 steps: query extraction → retrieval → generation
     if (pathname === '/api/chat/completions' && request.method === 'POST') {
       if (!env.OPENAI_API_KEY) {
@@ -150,7 +162,6 @@ export default {
       // Step 3: generate the answer using the retrieved context + full conversation
       const systemParts = []
       if (env.SYSTEM_PROMPT) systemParts.push(env.SYSTEM_PROMPT)
-      if (context) systemParts.push(`Use the following source material to answer the user's question. Cite relevant parts. If the answer isn't in the sources, say so rather than guessing.\n\n${context}`)
 
       const enrichedMessages = systemParts.length
         ? [{ role: 'system', content: systemParts.join('\n\n') }, ...messages]
@@ -166,20 +177,6 @@ export default {
         status: upstream.status,
         headers: { 'Content-Type': upstream.headers.get('Content-Type') || 'text/event-stream' },
       })
-    }
-
-    // Skip auth on localhost
-    const isLocalhost = url.hostname === 'localhost' || url.hostname === '127.0.0.1'
-
-    if (!isLocalhost) {
-      const accessValidation = await validateAccessJWT(request, env)
-
-      if (!accessValidation.valid) {
-        return new Response(
-          JSON.stringify({ error: 'Unauthorized', message: accessValidation.error }, null, 2),
-          { status: 401, headers: { 'Content-Type': 'application/json' } }
-        )
-      }
     }
 
     // Serve static assets using modern env.ASSETS binding
