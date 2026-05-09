@@ -371,7 +371,7 @@ export default function ChatView({ apiUrl, matchThreshold, maxResults, contextEx
                 return (
                   <div key={m.id} className={`cv-bubble cv-bubble--${m.role}`}>
                     {showTyping ? <TypingDots /> : m.role === 'assistant'
-                      ? <div className="cv-bubble-text cv-bubble-md"><Markdown>{m.content}</Markdown></div>
+                      ? <div className="cv-bubble-text cv-bubble-md"><Markdown components={{ a: ({node, ...props}) => <a {...props} target="_blank" rel="noreferrer" /> }}>{m.content}</Markdown></div>
                       : <span className="cv-bubble-text">{m.content}</span>
                     }
                   </div>

@@ -82,8 +82,9 @@ export default {
       const model = env.OPENAI_MODEL || 'gpt-4o'
       const authHeader = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${env.OPENAI_API_KEY}` }
 
-      // Step 1: ask the LLM to extract the best search query for the vector database
-      let searchQuery = messages.at(-1)?.content ?? ''
+      // Step 1: generate multiple search queries from different angles for better recall
+      const fallbackQuery = messages.at(-1)?.content ?? ''
+      let searchQueries = [fallbackQuery]
       try {
         const extractRes = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
@@ -91,10 +92,11 @@ export default {
           body: JSON.stringify({
             model,
             stream: false,
+            response_format: { type: 'json_object' },
             messages: [
               {
                 role: 'system',
-                content: 'From the conversation below, extract a concise search query optimized for semantic vector search. Focus on the factual subject matter — strip out conversational filler, pronouns, and follow-up phrasing. Return only the search query text, nothing else.',
+                content: 'Generate 3 diverse search queries for a semantic vector database based on the user\'s question. Use different phrasings, synonyms, and angles (e.g. theological terms, plain language, related concepts) to maximize recall. Return JSON: {"queries": ["...", "...", "..."]}',
               },
               ...messages,
             ],
@@ -102,36 +104,46 @@ export default {
         })
         if (extractRes.ok) {
           const data = await extractRes.json()
-          searchQuery = data.choices?.[0]?.message?.content?.trim() || searchQuery
+          const parsed = JSON.parse(data.choices?.[0]?.message?.content ?? '{}')
+          if (Array.isArray(parsed.queries) && parsed.queries.length) {
+            searchQueries = parsed.queries
+          }
         }
       } catch (_) { /* fall back to raw last message */ }
 
-      // Step 2: retrieve relevant chunks from the AI Search index using the optimized query
+      // Step 2: run all search queries in parallel, deduplicate chunks by url/title
       let context = ''
       if (env.API_URL) {
         try {
-          const searchRes = await fetch(`${env.API_URL.replace(/\/$/, '')}/search`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ messages: [{ role: 'user', content: searchQuery }] }),
+          const searchUrl = `${env.API_URL.replace(/\/$/, '')}/search`
+          const results = await Promise.all(
+            searchQueries.map(q =>
+              fetch(searchUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ messages: [{ role: 'user', content: q }] }),
+              }).then(r => r.ok ? r.json() : r.text().then(t => { console.error(`AI Search failed: ${r.status}`, t); return {} }))
+                .catch(e => { console.error('AI Search error:', e.message); return {} })
+            )
+          )
+
+          const seen = new Set()
+          const chunks = results.flatMap(r => r.chunks ?? r.data ?? []).filter(c => {
+            const text = c.text ?? c.content?.[0]?.text ?? ''
+            if (!text.trim() || seen.has(text)) return false
+            seen.add(text)
+            return true
           })
-          const searchBody = await searchRes.text()
-          if (searchRes.ok) {
-            const parsed = JSON.parse(searchBody)
-            // handle both response shapes: new {chunks:[]} and old {data:[{content:[{text}]}]}
-            const chunks = parsed.chunks ?? parsed.data ?? []
-            context = chunks.map(c => {
-              const text = c.text ?? c.content?.[0]?.text ?? ''
-              const title = c.item?.key ?? c.filename ?? ''
-              const url = c.attributes?.url ?? c.item?.attributes?.url ?? ''
-              const header = [title && `Title: ${title}`, url && `URL: ${url}`].filter(Boolean).join(' | ')
-              return header ? `[${header}]\n${text}` : text
-            }).filter(c => c.trim()).join('\n\n---\n\n')
-          } else {
-            console.error(`AI Search /search failed: ${searchRes.status}`, searchBody)
-          }
+
+          context = chunks.map(c => {
+            const text = c.text ?? c.content?.[0]?.text ?? ''
+            const title = c.item?.key ?? c.filename ?? ''
+            const url = c.attributes?.url ?? c.item?.attributes?.url ?? ''
+            const header = [title && `Title: ${title}`, url && `URL: ${url}`].filter(Boolean).join(' | ')
+            return header ? `[${header}]\n${text}` : text
+          }).join('\n\n---\n\n')
         } catch (e) {
-          console.error('AI Search /search error:', e.message)
+          console.error('AI Search error:', e.message)
         }
       }
 
