@@ -16,7 +16,7 @@ export default function App() {
   const [rewriteQuery, setRewriteQuery] = useState(true)
   const [reRankResults, setReRankResults] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState('chat')
+  const [activeTab, setActiveTab] = useState('search')
 
   return (
     <div className="app-container">
@@ -55,12 +55,6 @@ export default function App() {
         </button>
 
         <div className="tab-bar">
-          <button
-            className={`tab-button${activeTab === 'chat' ? ' active' : ''}`}
-            onClick={() => setActiveTab('chat')}
-          >
-            Chat
-          </button>
           <button
             className={`tab-button${activeTab === 'search' ? ' active' : ''}`}
             onClick={() => setActiveTab('search')}
