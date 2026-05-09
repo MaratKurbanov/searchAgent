@@ -290,3 +290,33 @@
     color: #fef9c3;
   }
 }
+
+@media (max-width: 600px) {
+  .sr-overlay {
+    padding: 12px;
+    align-items: flex-end;
+  }
+
+  .sr-overlay-panel {
+    max-height: 92vh;
+    border-radius: 16px 16px 12px 12px;
+  }
+
+  .sr-overlay-header {
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px 16px 12px;
+  }
+
+  .sr-overlay-actions {
+    justify-content: flex-start;
+  }
+
+  .sr-overlay-close {
+    margin-left: auto;
+  }
+
+  .sr-overlay-body {
+    padding: 16px;
+  }
+}
