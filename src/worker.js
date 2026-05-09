@@ -123,11 +123,12 @@ export default {
       }
 
       // Step 3: generate the answer using the retrieved context + full conversation
-      const enrichedMessages = context
-        ? [
-            { role: 'system', content: `Answer the user's question using the source material below. Cite relevant parts. If the answer isn't in the sources, say so rather than guessing.\n\n${context}` },
-            ...messages,
-          ]
+      const systemParts = []
+      if (env.SYSTEM_PROMPT) systemParts.push(env.SYSTEM_PROMPT)
+      if (context) systemParts.push(`Use the following source material to answer the user's question. Cite relevant parts. If the answer isn't in the sources, say so rather than guessing.\n\n${context}`)
+
+      const enrichedMessages = systemParts.length
+        ? [{ role: 'system', content: systemParts.join('\n\n') }, ...messages]
         : messages
 
       const upstream = await fetch('https://api.openai.com/v1/chat/completions', {
