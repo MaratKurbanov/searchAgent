@@ -291,6 +291,12 @@
   }
 }
 
+.sr-icon-group {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
 .sr-overlay-panel.fullscreen {
   max-width: 100%;
   width: 100%;
@@ -323,10 +329,6 @@
   .sr-overlay-actions {
     width: 100%;
     justify-content: flex-start;
-  }
-
-  .sr-overlay-close {
-    margin-left: auto;
   }
 
   .sr-overlay-body {
