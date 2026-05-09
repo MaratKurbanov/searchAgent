@@ -38,7 +38,7 @@ export default {
       }
 
       const { messages, stream, rewrite_query = false, ai_search_options = {} } = await request.json()
-      const model = env.OPENAI_MODEL || 'gpt-4o'
+      const model = env.OPENAI_MODEL || 'gpt-5.4-2026-03-05'
       const authHeader = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${env.OPENAI_API_KEY}` }
 
       // Step 1: generate multiple search queries from different angles for better recall
@@ -103,8 +103,9 @@ export default {
 
           context = chunks.map(c => {
             const text = c.text ?? c.content?.[0]?.text ?? ''
-            const title = c.item?.key ?? c.filename ?? ''
+            const titleMatch = text.match(/^TITLE:\s*(.+?)(?:\s+(?:SCRIPTURE|TOPICS|SERIES|URL):)/)
             const slug = (c.item?.key ?? c.filename ?? '').replace(/__chunk_\d+\.txt$/, '').replace(/\.txt$/, '')
+            const title = titleMatch?.[1]?.trim() || slug.replace(/-/g, ' ')
             const url = c.attributes?.url ?? c.item?.attributes?.url ?? c.item?.metadata?.url
                      ?? (env.SERMON_BASE_URL && slug ? `${env.SERMON_BASE_URL}${slug}/` : '')
             const header = [title && `Title: ${title}`, url && `URL: ${url}`].filter(Boolean).join(' | ')
