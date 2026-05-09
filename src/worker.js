@@ -70,7 +70,7 @@ export default {
       })
     }
 
-    // RAG + OpenAI proxy — retrieve from CF AI Search, generate with OpenAI
+    // RAG + OpenAI proxy — 3 steps: query extraction → retrieval → generation
     if (pathname === '/api/chat/completions' && request.method === 'POST') {
       if (!env.OPENAI_API_KEY) {
         return new Response(JSON.stringify({ error: 'OPENAI_API_KEY not configured' }), {
@@ -79,35 +79,60 @@ export default {
       }
 
       const { messages, stream } = await request.json()
+      const model = env.OPENAI_MODEL || 'gpt-4o'
+      const authHeader = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${env.OPENAI_API_KEY}` }
 
-      // Step 1: retrieve relevant chunks from the AI Search index
+      // Step 1: ask the LLM to extract the best search query for the vector database
+      let searchQuery = messages.at(-1)?.content ?? ''
+      try {
+        const extractRes = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: authHeader,
+          body: JSON.stringify({
+            model,
+            stream: false,
+            messages: [
+              {
+                role: 'system',
+                content: 'From the conversation below, extract a concise search query optimized for semantic vector search. Focus on the factual subject matter — strip out conversational filler, pronouns, and follow-up phrasing. Return only the search query text, nothing else.',
+              },
+              ...messages,
+            ],
+          }),
+        })
+        if (extractRes.ok) {
+          const data = await extractRes.json()
+          searchQuery = data.choices?.[0]?.message?.content?.trim() || searchQuery
+        }
+      } catch (_) { /* fall back to raw last message */ }
+
+      // Step 2: retrieve relevant chunks from the AI Search index using the optimized query
       let context = ''
       if (env.API_URL) {
         try {
           const searchRes = await fetch(`${env.API_URL.replace(/\/$/, '')}/search`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ messages }),
+            body: JSON.stringify({ messages: [{ role: 'user', content: searchQuery }] }),
           })
           if (searchRes.ok) {
             const { chunks = [] } = await searchRes.json()
             context = chunks.map(c => c.text).filter(Boolean).join('\n\n---\n\n')
           }
-        } catch (_) { /* proceed without context if search fails */ }
+        } catch (_) { /* proceed without context */ }
       }
 
-      // Step 2: inject retrieved context as a system message
+      // Step 3: generate the answer using the retrieved context + full conversation
       const enrichedMessages = context
-        ? [{ role: 'system', content: `Answer based on the following source material. If the answer is not in the sources, say so.\n\n${context}` }, ...messages]
+        ? [
+            { role: 'system', content: `Answer the user's question using the source material below. Cite relevant parts. If the answer isn't in the sources, say so rather than guessing.\n\n${context}` },
+            ...messages,
+          ]
         : messages
 
-      const model = env.OPENAI_MODEL || 'gpt-4o'
       const upstream = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${env.OPENAI_API_KEY}`,
-        },
+        headers: authHeader,
         body: JSON.stringify({ model, messages: enrichedMessages, stream }),
       })
 
