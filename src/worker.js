@@ -115,11 +115,18 @@ export default {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ messages: [{ role: 'user', content: searchQuery }] }),
           })
+          const searchBody = await searchRes.text()
           if (searchRes.ok) {
-            const { chunks = [] } = await searchRes.json()
-            context = chunks.map(c => c.text).filter(Boolean).join('\n\n---\n\n')
+            const parsed = JSON.parse(searchBody)
+            // handle both response shapes: new {chunks:[]} and old {data:[{content:[{text}]}]}
+            const chunks = parsed.chunks ?? parsed.data ?? []
+            context = chunks.map(c => c.text ?? c.content?.[0]?.text).filter(Boolean).join('\n\n---\n\n')
+          } else {
+            console.error(`AI Search /search failed: ${searchRes.status}`, searchBody)
           }
-        } catch (_) { /* proceed without context */ }
+        } catch (e) {
+          console.error('AI Search /search error:', e.message)
+        }
       }
 
       // Step 3: generate the answer using the retrieved context + full conversation
