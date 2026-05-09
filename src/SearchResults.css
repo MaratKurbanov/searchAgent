@@ -294,12 +294,12 @@
 @media (max-width: 600px) {
   .sr-overlay {
     padding: 12px;
-    align-items: flex-end;
+    align-items: center;
   }
 
   .sr-overlay-panel {
-    max-height: 92vh;
-    border-radius: 16px 16px 12px 12px;
+    max-height: 88dvh;
+    border-radius: 14px;
   }
 
   .sr-overlay-header {
