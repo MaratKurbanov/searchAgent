@@ -13,6 +13,11 @@ export default function SermonList() {
   const [content, setContent] = useState('')
   const [loading, setLoading] = useState(false)
   const [fullscreen, setFullscreen] = useState(false)
+  const [fontSize, setFontSize] = useState(15)
+
+  const FONT_MIN = 10
+  const FONT_MAX = 75
+  const FONT_STEP = 5
 
   useEffect(() => {
     fetch('/assets/sermons-manifest.json')
@@ -45,6 +50,7 @@ export default function SermonList() {
     setSelected(null)
     setContent('')
     setFullscreen(false)
+    setFontSize(15)
   }
 
   return (
@@ -98,6 +104,23 @@ export default function SermonList() {
                 )}
               </div>
               <div className="sr-overlay-actions">
+                <div className="sl-font-controls">
+                  <button
+                    className="sl-font-btn"
+                    onClick={() => setFontSize(s => Math.max(FONT_MIN, s - FONT_STEP))}
+                    disabled={fontSize <= FONT_MIN}
+                    aria-label="Decrease font size"
+                    title="Decrease font size"
+                  >A−</button>
+                  <span className="sl-font-size">{fontSize}px</span>
+                  <button
+                    className="sl-font-btn"
+                    onClick={() => setFontSize(s => Math.min(FONT_MAX, s + FONT_STEP))}
+                    disabled={fontSize >= FONT_MAX}
+                    aria-label="Increase font size"
+                    title="Increase font size"
+                  >A+</button>
+                </div>
                 <div className="sr-icon-group">
                   <button
                     className="sr-overlay-close"
@@ -123,7 +146,7 @@ export default function SermonList() {
                 </div>
               </div>
             </div>
-            <div className="sr-overlay-body sl-body">
+            <div className="sr-overlay-body sl-body" style={{ fontSize: `${fontSize}px` }}>
               {loading ? <span className="sl-loading">Loading…</span> : content}
             </div>
           </div>

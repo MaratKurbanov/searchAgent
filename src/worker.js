@@ -75,6 +75,7 @@ export default {
 
       // Step 2: run all search queries in parallel, deduplicate chunks by url/title
       let context = ''
+      let chunkCount = 0
       if (env.API_URL) {
         try {
           const searchUrl = `${env.API_URL.replace(/\/$/, '')}/search`
@@ -100,6 +101,7 @@ export default {
             seen.add(text)
             return true
           })
+          chunkCount = chunks.length
 
           context = chunks.map(c => {
             const text = c.text ?? c.content?.[0]?.text ?? ''
@@ -159,7 +161,20 @@ export default {
       }
 
       // console.log('[LLM ← answer] streaming response started, status:', upstream.status)
-      return new Response(upstream.body, {
+      const metaEvent = new TextEncoder().encode(`data: ${JSON.stringify({ type: 'rag_meta', chunk_count: chunkCount })}\n\n`)
+      const { readable, writable } = new TransformStream()
+      const writer = writable.getWriter()
+      ctx.waitUntil((async () => {
+        await writer.write(metaEvent)
+        const reader = upstream.body.getReader()
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+          await writer.write(value)
+        }
+        await writer.close()
+      })())
+      return new Response(readable, {
         status: upstream.status,
         headers: { 'Content-Type': upstream.headers.get('Content-Type') || 'text/event-stream' },
       })

@@ -189,3 +189,17 @@ The patch file lives in `patches/`. If the package is upgraded to a version wher
 - **Cloudflare Workers** + **Wrangler**
 - **@cloudflare/ai-search-snippet** — `<chat-page-snippet>` Web Component (chat tab)
 - **patch-package** — patches the snippet bundle to enable full-text retrieval
+
+## Example Claude Code prompts for Cloudflare MCP
+- Check my Workers deployment logs for errors and suggest fixes.
+- Add a D1 database to this Worker and create a users table with CRUD endpoints.
+- Create a Logpush job to stream Workers analytics to my data warehouse.
+- Set up WAF rules to block SQL injection and XSS attacks on my application.
+- Configure caching rules and cache TTLs to reduce origin load for my ecommerce store.
+- Build an image upload service using R2 and Cloudflare Images.
+- Deploy this full-stack React app to Cloudflare Pages with a Workers API backend and D1 database.
+- Use the Cloudflare docs MCP server to check the current recommended Durable Objects WebSocket pattern, then update this Worker accordingly.
+- Look at recent Worker errors and latency. Identify the likely cause and patch the code.
+- Analyze DNS performance for my zone and suggest configuration changes.
+- Review my AI Gateway logs and summarize cost, latency, error rate, and model fallback behavior.
+- check Zero Trust DNS blocked queries

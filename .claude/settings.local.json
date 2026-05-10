@@ -73,11 +73,30 @@
       "Bash(git -C /Users/maratkurbanov/Documents/work/cloudflare/searchAgent commit -m ' *)",
       "Bash(git -C /Users/maratkurbanov/Documents/work/cloudflare/searchAgent push origin main)",
       "Bash(git rm *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "mcp__playwright__browser_resize",
+      "mcp__playwright__browser_close",
+      "mcp__playwright__browser_tabs",
+      "Bash(pkill -f \"mcp-chrome\")",
+      "mcp__cloudflare-api__search",
+      "mcp__cloudflare-api__execute"
     ]
   },
   "enabledMcpjsonServers": [
     "hadis",
     "keller"
-  ]
+  ],
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx prettier --write $CLAUDE_FILE_PATHS 2>/dev/null; npx tsc --noEmit 2>&1 | head -20"
+          }
+        ]
+      }
+    ]
+  }
 }

@@ -234,6 +234,7 @@ export default function ChatView({ apiUrl, matchThreshold, maxResults, contextEx
     const controller = new AbortController()
     abortRef.current = controller
     let fullContent  = ''
+    let ragChunkCount = null
 
     try {
       const res = await fetch('/api/chat/completions', {
@@ -256,7 +257,17 @@ export default function ChatView({ apiUrl, matchThreshold, maxResults, contextEx
         const lines = buf.split('\n')
         buf = lines.pop() ?? ''
         for (const line of lines) {
-          const chunk = parseChunk(line.trim())
+          const trimmed = line.trim()
+          if (trimmed.startsWith('data:')) {
+            const raw = trimmed.slice(5).trim()
+            if (raw !== '[DONE]') {
+              try {
+                const j = JSON.parse(raw)
+                if (j.type === 'rag_meta') { ragChunkCount = j.chunk_count; continue }
+              } catch { /* not JSON, fall through */ }
+            }
+          }
+          const chunk = parseChunk(trimmed)
           if (chunk) {
             fullContent += chunk
             setConvs(prev => prev.map(c => c.id !== activeId ? c : {
@@ -287,7 +298,7 @@ export default function ChatView({ apiUrl, matchThreshold, maxResults, contextEx
       const final = prev.map(c => c.id !== activeId ? c : {
         ...c,
         updatedAt: Date.now(),
-        messages: c.messages.map(m => m.id === aiMsg.id ? { ...m, content: fullContent } : m),
+        messages: c.messages.map(m => m.id === aiMsg.id ? { ...m, content: fullContent, sourceCount: ragChunkCount } : m),
       })
       saveConvs(final, storageKey)
       return final
@@ -382,7 +393,10 @@ export default function ChatView({ apiUrl, matchThreshold, maxResults, contextEx
                 return (
                   <div key={m.id} className={`cv-bubble cv-bubble--${m.role}`}>
                     {showTyping ? <TypingDots /> : m.role === 'assistant'
-                      ? <div className="cv-bubble-text cv-bubble-md"><Markdown components={{ a: ({node, ...props}) => <a {...props} target="_blank" rel="noreferrer" /> }}>{m.content}</Markdown></div>
+                      ? <>
+                          <div className="cv-bubble-text cv-bubble-md"><Markdown components={{ a: ({node, ...props}) => <a {...props} target="_blank" rel="noreferrer" /> }}>{m.content}</Markdown></div>
+                          {m.sourceCount != null && <div className="cv-dev-meta">{m.sourceCount} search result{m.sourceCount !== 1 ? 's' : ''} retrieved</div>}
+                        </>
                       : <span className="cv-bubble-text">{m.content}</span>
                     }
                   </div>

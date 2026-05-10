@@ -311,6 +311,13 @@
   opacity: 0.75;
 }
 
+.cv-dev-meta {
+  margin-top: 8px;
+  font-size: 0.72em;
+  opacity: 0.4;
+  font-family: ui-monospace, monospace;
+}
+
 @media (prefers-color-scheme: dark) {
   .cv-bubble-md code,
   .cv-bubble-md pre {
@@ -483,6 +490,27 @@
 .cv-new-btn:hover {
   background: var(--panel-bg);
   border-color: var(--accent-color);
+}
+
+/* ── Mobile tap targets ≥44px ───────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .cv-hamburger {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 13px;
+  }
+
+  .cv-send-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+  }
+
+  .cv-new-btn {
+    min-height: 44px;
+    padding: 11px 12px;
+  }
 }
 
 /* ── Desktop: sidebar always visible ────────────────────────────────────────── */

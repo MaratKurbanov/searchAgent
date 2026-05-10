@@ -33,6 +33,14 @@ Browser → Cloudflare Access (JWT) → Worker (src/worker.js)
 
 `API_URL` is a **runtime** Worker var. The Worker injects it into the HTML as `window.API_URL` on each request, so a single build artifact works for all dataset deployments. Local dev falls back to `VITE_API_URL` in `.env`.
 
+# Model Names
+- Use exact model names as specified by the user (e.g., 'gpt-5-mini' is NOT 'gpt-4o-mini')
+- Do not substitute or 'correct' model identifiers based on assumptions about what exists
+
+## Don't Go In Circles
+- If two attempts at the same fix fail, STOP and reconsider the approach rather than tweaking variations
+- Verify component/API names exist before referencing them (e.g., don't guess 'snippet-search')
+
 ## Datasets
 
 | Env name | Worker name | Notes |
@@ -75,3 +83,19 @@ npm run worker:deploy:keller      # deploy keller only (no build)
 - `VITE_API_URL` is a **build-time** variable (baked into the JS bundle by Vite). It is NOT a runtime Worker env var — changing it in `wrangler.toml` vars has no effect; you must pass it during `npm run build`.
 - The `[ai]` binding in `wrangler.toml` is defined but unused by the Worker — the AI inference happens inside the managed AI Search service, not here.
 - Cloudflare Access JWT validation is bypassed for `localhost` — no Access setup needed for local dev.
+
+## Mobile UI Changes
+
+**Any request that touches mobile layout, responsive CSS, tap targets, or viewport behavior must be routed through the `mobile-verifier` subagent** (`.claude/agents/mobile-verifier.md`). The agent implements the change, screenshots at 375/768/1280px via Playwright MCP, verifies no cut-off elements, no overlaps, and all tap targets ≥44px, and iterates up to 5 times before reporting.
+
+Trigger phrase examples: "fix mobile", "responsive", "tap target", "viewport", "screen size", "phone layout", "iPad", "small screen".
+
+## Logging section near the top of CLAUDE.md, before any framework-specific instructions\n\n## Logging
+- Never comment out or remove console.log/debug statements when fixing bugs - they are essential for diagnosis
+- When adding logging, cover BOTH server and client paths (including UI components like SearchResults.jsx)
+
+
+## Cloudflare Workers section in CLAUDE.md\n\n## Cloudflare Workers
+- Use the modern [assets] binding pattern in wrangler.toml - NOT the deprecated Workers Sites / getAssetFromKV approach
+- For MCP server scope, use `--scope user` (not `--scope global` which is invalid)
+- When debugging, check whether running locally vs production and apply migrations to the local D1 database

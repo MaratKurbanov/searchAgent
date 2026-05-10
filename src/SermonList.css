@@ -114,6 +114,50 @@
 .sl-body {
   font-size: 15px;
   line-height: 1.8;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.sl-font-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0 6px;
+  height: 32px;
+}
+
+.sl-font-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  padding: 0 4px;
+  line-height: 1;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+}
+
+.sl-font-btn:hover:not(:disabled) {
+  color: var(--text-color);
+  background: var(--panel-bg);
+}
+
+.sl-font-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.sl-font-size {
+  font-size: 11px;
+  color: var(--text-secondary);
+  min-width: 28px;
+  text-align: center;
+  font-family: ui-monospace, monospace;
 }
 
 .sl-loading {
