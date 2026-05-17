@@ -13,7 +13,10 @@ function parseChunk(chunk) {
     chunk.item?.key?.replace(/__chunk_\d+\.txt$/, '').replace(/-/g, ' ')
   const url = urlMatch?.[1] || chunk.item?.metadata?.url || null
   const sd = chunk.scoring_details ?? null
-  return { title, url, body, timestamp: chunk.item?.timestamp ?? null, score: chunk.score ?? null, scoringDetails: sd }
+  const file = chunk.item?.key
+    ? chunk.item.key.replace(/__chunk_\d+\.txt$/, '').replace(/\.txt$/, '') + '.txt'
+    : null
+  return { title, url, body, file, timestamp: chunk.item?.timestamp ?? null, score: chunk.score ?? null, scoringDetails: sd }
 }
 
 function formatScore(r) {
@@ -29,11 +32,6 @@ function formatScore(r) {
   return parts.join(' · ')
 }
 
-function formatDate(ts) {
-  if (!ts) return null
-  return new Date(ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
-}
-
 function highlight(text, query, exact = false) {
   if (!query || !text) return text
   let re
@@ -47,13 +45,22 @@ function highlight(text, query, exact = false) {
     re = new RegExp(`\\b(${escaped.join('|')})\\b`, 'gi')
   }
   const parts = text.split(re)
-  // split() with a capturing group puts matches at odd indices
   return parts.map((part, i) =>
     i % 2 === 1 ? <mark key={i} className="sr-highlight">{part}</mark> : part
   )
 }
 
-export default function SearchResults({ apiUrl }) {
+function BookmarkIcon({ filled }) {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24"
+      fill={filled ? 'currentColor' : 'none'}
+      stroke="currentColor" strokeWidth="2">
+      <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+    </svg>
+  )
+}
+
+export default function SearchResults({ apiUrl, user, bookmarkMap, onBookmark }) {
   const [query, setQuery] = useState('')
   const [searchedQuery, setSearchedQuery] = useState('')
   const [results, setResults] = useState([])
@@ -77,10 +84,7 @@ export default function SearchResults({ apiUrl }) {
       console.log('[Search → AI Search] url:', searchUrl, '| body:', JSON.stringify(body))
       const res = await fetch(searchUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'cf-ai-search-source': 'snippet-search',
-        },
+        headers: { 'Content-Type': 'application/json', 'cf-ai-search-source': 'snippet-search' },
         body: JSON.stringify(body),
       })
       if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`)
@@ -125,11 +129,7 @@ export default function SearchResults({ apiUrl }) {
         </button>
       </form>
 
-      {error && (
-        <div className="sr-error">
-          <strong>Error:</strong> {error}
-        </div>
-      )}
+      {error && <div className="sr-error"><strong>Error:</strong> {error}</div>}
 
       {total !== null && !error && (
         <div className="sr-count">{total} result{total !== 1 ? 's' : ''}</div>
@@ -137,21 +137,43 @@ export default function SearchResults({ apiUrl }) {
 
       {results.length > 0 && (
         <div className="sr-list">
-          {results.map((r, i) => (
-            <button key={i} className="sr-card" onClick={() => setSelected(r)}>
-              <div className="sr-card-title-row">
-                <span className="sr-card-title">{r.title || 'Untitled'}</span>
-                {formatScore(r) && <span className="sr-score-badge">{formatScore(r)}</span>}
+          {results.map((r, i) => {
+            const bookmarked = r.file && bookmarkMap?.has(r.file)
+            return (
+              <div
+                key={i}
+                className="sr-card"
+                onClick={() => setSelected(r)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={e => e.key === 'Enter' && setSelected(r)}
+              >
+                <div className="sr-card-title-row">
+                  <span className="sr-card-title">{r.title || 'Untitled'}</span>
+                  <div className="sr-card-right">
+                    {formatScore(r) && <span className="sr-score-badge">{formatScore(r)}</span>}
+                    {user && r.file && (
+                      <button
+                        className={`sr-bookmark-btn${bookmarked ? ' active' : ''}`}
+                        onClick={e => { e.stopPropagation(); onBookmark?.(r.file, r.title || 'Untitled', r.url) }}
+                        aria-label={bookmarked ? 'Remove bookmark' : 'Bookmark sermon'}
+                        title={bookmarked ? 'Remove bookmark' : 'Add bookmark'}
+                      >
+                        <BookmarkIcon filled={bookmarked} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+                {r.url && <div className="sr-card-url">{r.url}</div>}
+                <div className="sr-card-body">
+                  {highlight(
+                    (r.body?.slice(0, 220) ?? '') + ((r.body?.length ?? 0) > 220 ? '…' : ''),
+                    searchedQuery, exactMatch
+                  )}
+                </div>
               </div>
-              {r.url && <div className="sr-card-url">{r.url}</div>}
-              <div className="sr-card-body">
-                {highlight(
-                  (r.body?.slice(0, 220) ?? '') + ((r.body?.length ?? 0) > 220 ? '…' : ''),
-                  searchedQuery, exactMatch
-                )}
-              </div>
-            </button>
-          ))}
+            )
+          })}
         </div>
       )}
 

@@ -164,3 +164,194 @@
   color: var(--text-secondary);
   font-style: italic;
 }
+
+/* Controls row */
+.sl-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.sl-ctrl-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.sl-ctrl-btn:hover {
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+}
+
+.sl-ctrl-btn.active {
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.sl-clear-all {
+  color: var(--text-secondary);
+  margin-left: auto;
+}
+
+.sl-clear-all:hover {
+  color: #ef4444;
+  border-color: #ef4444;
+}
+
+/* Topics dropdown */
+.sl-topics-wrap {
+  position: relative;
+}
+
+.sl-topic-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 200;
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  padding: 12px;
+  width: 420px;
+  max-width: 90vw;
+}
+
+.sl-topic-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.sl-topic-pill {
+  padding: 4px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.12s;
+  white-space: nowrap;
+}
+
+.sl-topic-pill:hover {
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+}
+
+.sl-topic-pill.active {
+  border-color: var(--accent-color);
+  background: var(--accent-color);
+  color: white;
+}
+
+/* Active topic chips */
+.sl-active-topics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.sl-topic-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px 3px 10px;
+  border-radius: 14px;
+  background: var(--accent-color);
+  color: white;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.sl-topic-chip button {
+  width: 16px;
+  height: 16px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background 0.12s;
+}
+
+.sl-topic-chip button:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+/* Card layout with secondary scripture line */
+.sl-card {
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sl-card-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.sl-card-scripture {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* Scripture in overlay */
+.sl-overlay-scripture {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: -2px;
+}
+
+.sl-bookmark-btn {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  padding: 0;
+  opacity: 0;
+}
+
+.sl-card:hover .sl-bookmark-btn,
+.sl-bookmark-btn.active {
+  opacity: 1;
+}
+
+.sl-bookmark-btn:hover,
+.sl-bookmark-btn.active {
+  color: var(--accent-color);
+  background: var(--slider-bg);
+}

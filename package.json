@@ -14,6 +14,8 @@
     "worker:deploy": "npm run build && wrangler deploy --env hadis && wrangler deploy --env keller",
     "worker:deploy:hadis": "wrangler deploy --env hadis",
     "worker:deploy:keller": "wrangler deploy --env keller",
+    "db:migrate": "wrangler d1 execute search-agent-bookmarks --file migrations/0001_initial.sql --remote",
+    "db:migrate:local": "wrangler d1 execute search-agent-bookmarks --env hadis --file migrations/0001_initial.sql --local",
     "postinstall": "patch-package"
   },
   "dependencies": {

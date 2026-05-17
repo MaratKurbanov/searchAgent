@@ -79,7 +79,12 @@
       "mcp__playwright__browser_tabs",
       "Bash(pkill -f \"mcp-chrome\")",
       "mcp__cloudflare-api__search",
-      "mcp__cloudflare-api__execute"
+      "mcp__cloudflare-api__execute",
+      "mcp__claude_ai_Cloudflare_Developer_Platform__accounts_list",
+      "mcp__claude_ai_Cloudflare_Developer_Platform__set_active_account",
+      "mcp__claude_ai_Cloudflare_Developer_Platform__d1_databases_list",
+      "mcp__claude_ai_Cloudflare_Developer_Platform__d1_database_create",
+      "mcp__claude_ai_Cloudflare_Developer_Platform__d1_database_query"
     ]
   },
   "enabledMcpjsonServers": [

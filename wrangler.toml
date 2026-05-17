@@ -54,6 +54,11 @@ SYSTEM_PROMPT = """
     End every response with a References section listing the contributing hadis collections, derived from source file names (e.g. "ibnmajah.txt" → Ibnmajah).
 """
 
+[[env.hadis.d1_databases]]
+binding = "DB"
+database_name = "search-agent-bookmarks"
+database_id = "687112db-81d0-4bdd-b291-6e6ca9c0cc85"
+
 [env.hadis.ai]
 binding = "AI"
 
@@ -84,6 +89,11 @@ ENVIRONMENT = "production"
 LOG_LEVEL = "warn"
 OPENAI_MODEL = "gpt-5.4-2026-03-05"
 SYSTEM_PROMPT = "You are an expert on Tim Keller's sermons. Answer only from the source material provided — do not use outside knowledge. If relevant sources exist, end with a References section of markdown links using the title and URL from each source. If no sources are relevant, say so."
+
+[[env.keller.d1_databases]]
+binding = "DB"
+database_name = "search-agent-bookmarks"
+database_id = "687112db-81d0-4bdd-b291-6e6ca9c0cc85"
 
 [env.keller.ai]
 binding = "AI"
