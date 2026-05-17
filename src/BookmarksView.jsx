@@ -1,8 +1,10 @@
 import { useState } from 'react'
+import SermonOverlay from './SermonOverlay'
 import './BookmarksView.css'
 
-export default function BookmarksView({ bookmarks, onToggleRead, onRemove, onClearRead }) {
+export default function BookmarksView({ bookmarks, onToggleRead, onRemove, onClearRead, user, bookmarkMap, onBookmark }) {
   const [section, setSection] = useState('toread')
+  const [overlaySermon, setOverlaySermon] = useState(null)
 
   const toRead = bookmarks.filter(b => !b.is_read)
   const read = bookmarks.filter(b => b.is_read)
@@ -13,6 +15,12 @@ export default function BookmarksView({ bookmarks, onToggleRead, onRemove, onCle
     return new Date(unixTs * 1000).toLocaleDateString(undefined, {
       month: 'short', day: 'numeric', year: 'numeric',
     })
+  }
+
+  function openSermon(b) {
+    if (b.sermon_file) {
+      setOverlaySermon({ file: b.sermon_file, title: b.sermon_title, url: b.sermon_url })
+    }
   }
 
   return (
@@ -66,23 +74,13 @@ export default function BookmarksView({ bookmarks, onToggleRead, onRemove, onCle
                 )}
               </button>
 
-              <div className="bv-item-content">
+              <div className="bv-item-content bv-item-content--clickable" onClick={() => openSermon(b)}>
                 <span className="bv-title">{b.sermon_title}</span>
-                <div className="bv-meta">
-                  {b.sermon_url && (
-                    <a
-                      href={b.sermon_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="bv-url"
-                    >
-                      {b.sermon_url}
-                    </a>
-                  )}
-                  {!!b.is_read && !!b.read_at && (
+                {!!b.is_read && !!b.read_at && (
+                  <div className="bv-meta">
                     <span className="bv-read-date">Read {formatDate(b.read_at)}</span>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
 
               <button
@@ -99,6 +97,16 @@ export default function BookmarksView({ bookmarks, onToggleRead, onRemove, onCle
           ))
         )}
       </div>
+
+      {overlaySermon && (
+        <SermonOverlay
+          sermon={overlaySermon}
+          user={user}
+          bookmarkMap={bookmarkMap}
+          onBookmark={onBookmark}
+          onClose={() => setOverlaySermon(null)}
+        />
+      )}
     </div>
   )
 }

@@ -33,11 +33,7 @@ export default function App() {
   )
 
   useEffect(() => {
-    if (localStorage.getItem(SIGNED_IN_KEY)) {
-      signIn()
-    } else {
-      setUserLoading(false)
-    }
+    signIn()
   }, [])
 
   async function signIn() {
@@ -131,39 +127,6 @@ export default function App() {
           )}
         </button>
 
-        {/* User area — top right */}
-        <div className="user-area">
-          {!userLoading && (
-            !user ? (
-              <button className="user-btn" onClick={signIn} title="Sign in to use bookmarks">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                  <circle cx="12" cy="7" r="4" />
-                </svg>
-                Sign In
-              </button>
-            ) : (
-              <div className="user-signed-in">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                  <circle cx="12" cy="7" r="4" />
-                </svg>
-                <span className="user-email-display" title={user.email}>
-                  {user.email.split('@')[0]}
-                </span>
-                <button className="user-signout" onClick={signOut} title="Sign out">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                    <polyline points="16 17 21 12 16 7" />
-                    <line x1="21" y1="12" x2="9" y2="12" />
-                  </svg>
-                  Sign Out
-                </button>
-              </div>
-            )
-          )}
-        </div>
-
         <div className="tab-bar">
           <button
             className={`tab-button${activeTab === 'search' ? ' active' : ''}`}
@@ -177,14 +140,12 @@ export default function App() {
             className={`tab-button${activeTab === 'read' ? ' active' : ''}`}
             onClick={() => setActiveTab('read')}
           >Sermons</button>
-          {user && (
-            <button
-              className={`tab-button${activeTab === 'bookmarks' ? ' active' : ''}`}
-              onClick={() => setActiveTab('bookmarks')}
-            >
-              Bookmarks
-            </button>
-          )}
+          <button
+            className={`tab-button${activeTab === 'bookmarks' ? ' active' : ''}`}
+            onClick={() => setActiveTab('bookmarks')}
+          >
+            Bookmarks
+          </button>
           {user?.role === 'admin' && (user?.email === ADMIN_EMAIL || IS_LOCALHOST) && (
             <button
               className={`tab-button tab-button--icon${activeTab === 'admin' ? ' active' : ''}`}
@@ -227,19 +188,20 @@ export default function App() {
           />
         </div>
 
-        {user && (
-          <div className="bookmarks-wrapper" hidden={activeTab !== 'bookmarks'}>
-            <BookmarksView
-              bookmarks={bookmarks}
-              onToggleRead={toggleRead}
-              onRemove={id => {
-                fetch(`/api/bookmarks/${id}`, { method: 'DELETE' })
-                setBookmarks(prev => prev.filter(b => b.id !== id))
-              }}
-              onClearRead={clearRead}
-            />
-          </div>
-        )}
+        <div className="bookmarks-wrapper" hidden={activeTab !== 'bookmarks'}>
+          <BookmarksView
+            bookmarks={bookmarks}
+            onToggleRead={toggleRead}
+            onRemove={id => {
+              fetch(`/api/bookmarks/${id}`, { method: 'DELETE' })
+              setBookmarks(prev => prev.filter(b => b.id !== id))
+            }}
+            onClearRead={clearRead}
+            user={user}
+            bookmarkMap={bookmarkMap}
+            onBookmark={toggleBookmark}
+          />
+        </div>
 
         {user?.role === 'admin' && (user?.email === ADMIN_EMAIL || IS_LOCALHOST) && (
           <div className="admin-wrapper" hidden={activeTab !== 'admin'}>

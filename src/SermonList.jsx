@@ -1,39 +1,18 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
+import SermonOverlay, { BookmarkIcon } from './SermonOverlay'
 import './SermonList.css'
-
-function parseBody(text) {
-  const sepIdx = text.search(/={5,}/)
-  return sepIdx > -1 ? text.slice(sepIdx).replace(/^=+\s*/, '').trim() : text
-}
-
-function BookmarkIcon({ filled }) {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24"
-      fill={filled ? 'currentColor' : 'none'}
-      stroke="currentColor" strokeWidth="2">
-      <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-    </svg>
-  )
-}
 
 export default function SermonList({ user, bookmarkMap = new Map(), onBookmark }) {
   const [sermons, setSermons] = useState([])
   const [filter, setFilter] = useState('')
   const [selected, setSelected] = useState(null)
-  const [content, setContent] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [fullscreen, setFullscreen] = useState(false)
-  const [fontSize, setFontSize] = useState(15)
 
   // Sort & filter state
   const [sortBy, setSortBy] = useState('default')        // 'default' | 'bookmarked'
   const [selectedTopics, setSelectedTopics] = useState(new Set())
   const [topicPanelOpen, setTopicPanelOpen] = useState(false)
+  const [topicSearch, setTopicSearch] = useState('')
   const topicPanelRef = useRef(null)
-
-  const FONT_MIN = 10
-  const FONT_MAX = 75
-  const FONT_STEP = 5
 
   useEffect(() => {
     fetch('/assets/sermons-manifest.json')
@@ -48,6 +27,7 @@ export default function SermonList({ user, bookmarkMap = new Map(), onBookmark }
     function handleClick(e) {
       if (topicPanelRef.current && !topicPanelRef.current.contains(e.target)) {
         setTopicPanelOpen(false)
+        setTopicSearch('')
       }
     }
     document.addEventListener('mousedown', handleClick)
@@ -106,26 +86,6 @@ export default function SermonList({ user, bookmarkMap = new Map(), onBookmark }
     return items
   }, [sermons, filter, selectedTopics, sortBy, bookmarkMap])
 
-  async function openSermon(sermon) {
-    setSelected(sermon)
-    setContent('')
-    setLoading(true)
-    try {
-      const r = await fetch(`/assets/full-sermons/${sermon.file}`)
-      const text = await r.text()
-      setContent(parseBody(text))
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  function close() {
-    setSelected(null)
-    setContent('')
-    setFullscreen(false)
-    setFontSize(15)
-  }
-
   return (
     <div className="sl-root">
       {/* Search + controls row */}
@@ -138,7 +98,8 @@ export default function SermonList({ user, bookmarkMap = new Map(), onBookmark }
           type="text"
           placeholder="Filter sermons…"
           value={filter}
-          onChange={e => setFilter(e.target.value)}
+          onChange={e => setFilter(e.target.value.trimStart())}
+          onBlur={e => setFilter(e.target.value.trim())}
         />
         {filter && (
           <button className="sl-clear" onClick={() => setFilter('')} aria-label="Clear filter">
@@ -151,19 +112,6 @@ export default function SermonList({ user, bookmarkMap = new Map(), onBookmark }
 
       {/* Sort + topic filter controls */}
       <div className="sl-controls">
-        <button
-          className={`sl-ctrl-btn${sortBy === 'bookmarked' ? ' active' : ''}`}
-          onClick={() => setSortBy(s => s === 'bookmarked' ? 'default' : 'bookmarked')}
-          title={sortBy === 'bookmarked' ? 'Remove bookmark sort' : 'Sort bookmarked first'}
-        >
-          <svg width="13" height="13" viewBox="0 0 24 24"
-            fill={sortBy === 'bookmarked' ? 'currentColor' : 'none'}
-            stroke="currentColor" strokeWidth="2">
-            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-          </svg>
-          Bookmarked first
-        </button>
-
         <div className="sl-topics-wrap" ref={topicPanelRef}>
           <button
             className={`sl-ctrl-btn${topicPanelOpen || selectedTopics.size > 0 ? ' active' : ''}`}
@@ -182,20 +130,45 @@ export default function SermonList({ user, bookmarkMap = new Map(), onBookmark }
 
           {topicPanelOpen && (
             <div className="sl-topic-panel">
+              <div className="sl-topic-search">
+                <input
+                  className="sl-topic-search-input"
+                  type="text"
+                  placeholder="Search topics…"
+                  value={topicSearch}
+                  onChange={e => setTopicSearch(e.target.value)}
+                  autoFocus
+                />
+              </div>
               <div className="sl-topic-grid">
-                {allTopics.map(topic => (
-                  <button
-                    key={topic}
-                    className={`sl-topic-pill${selectedTopics.has(topic) ? ' active' : ''}`}
-                    onClick={() => toggleTopic(topic)}
-                  >
-                    {topic}
-                  </button>
-                ))}
+                {allTopics
+                  .filter(t => t.toLowerCase().includes(topicSearch.toLowerCase()))
+                  .map(topic => (
+                    <button
+                      key={topic}
+                      className={`sl-topic-pill${selectedTopics.has(topic) ? ' active' : ''}`}
+                      onClick={() => toggleTopic(topic)}
+                    >
+                      {topic}
+                    </button>
+                  ))}
               </div>
             </div>
           )}
         </div>
+
+        <button
+          className={`sl-ctrl-btn${sortBy === 'bookmarked' ? ' active' : ''}`}
+          onClick={() => setSortBy(s => s === 'bookmarked' ? 'default' : 'bookmarked')}
+          title={sortBy === 'bookmarked' ? 'Remove bookmark sort' : 'Sort bookmarked first'}
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24"
+            fill={sortBy === 'bookmarked' ? 'currentColor' : 'none'}
+            stroke="currentColor" strokeWidth="2">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+          </svg>
+          Bookmarked first
+        </button>
 
         {hasActiveFilters && (
           <button className="sl-ctrl-btn sl-clear-all" onClick={clearFilters}>
@@ -229,10 +202,10 @@ export default function SermonList({ user, bookmarkMap = new Map(), onBookmark }
             <div
               key={s.file}
               className="sl-card"
-              onClick={() => openSermon(s)}
+              onClick={() => setSelected(s)}
               role="button"
               tabIndex={0}
-              onKeyDown={e => e.key === 'Enter' && openSermon(s)}
+              onKeyDown={e => e.key === 'Enter' && setSelected(s)}
             >
               <div className="sl-card-main">
                 <span className="sl-card-title">{s.title}</span>
@@ -254,82 +227,13 @@ export default function SermonList({ user, bookmarkMap = new Map(), onBookmark }
       </div>
 
       {selected && (
-        <div className={`sr-overlay${fullscreen ? ' sr-overlay--fullscreen' : ''}`} onClick={close}>
-          <div className={`sr-overlay-panel sl-panel${fullscreen ? ' fullscreen' : ''}`} onClick={e => e.stopPropagation()}>
-            <div className="sr-overlay-header">
-              <div className="sl-overlay-meta">
-                <h2 className="sr-overlay-title">{selected.title}</h2>
-                {selected.scripture && <div className="sl-overlay-scripture">{selected.scripture}</div>}
-                {selected.url && (
-                  <a
-                    className="sr-overlay-url"
-                    href={selected.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={e => e.stopPropagation()}
-                  >
-                    {selected.url}
-                  </a>
-                )}
-              </div>
-              <div className="sr-overlay-actions">
-                <div className="sl-font-controls">
-                  <button
-                    className="sl-font-btn"
-                    onClick={() => setFontSize(s => Math.max(FONT_MIN, s - FONT_STEP))}
-                    disabled={fontSize <= FONT_MIN}
-                    aria-label="Decrease font size"
-                    title="Decrease font size"
-                  >A−</button>
-                  <span className="sl-font-size">{fontSize}px</span>
-                  <button
-                    className="sl-font-btn"
-                    onClick={() => setFontSize(s => Math.min(FONT_MAX, s + FONT_STEP))}
-                    disabled={fontSize >= FONT_MAX}
-                    aria-label="Increase font size"
-                    title="Increase font size"
-                  >A+</button>
-                </div>
-                {user && (
-                  <button
-                    className={`sl-bookmark-btn${bookmarkMap.has(selected.file) ? ' active' : ''}`}
-                    onClick={() => onBookmark?.(selected.file, selected.title, selected.url)}
-                    aria-label={bookmarkMap.has(selected.file) ? 'Remove bookmark' : 'Add bookmark'}
-                    title={bookmarkMap.has(selected.file) ? 'Remove bookmark' : 'Add bookmark'}
-                  >
-                    <BookmarkIcon filled={bookmarkMap.has(selected.file)} />
-                  </button>
-                )}
-                <div className="sr-icon-group">
-                  <button
-                    className="sr-overlay-close"
-                    onClick={() => setFullscreen(f => !f)}
-                    aria-label={fullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
-                    title={fullscreen ? 'Exit fullscreen' : 'Fullscreen'}
-                  >
-                    {fullscreen ? (
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>
-                      </svg>
-                    ) : (
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
-                      </svg>
-                    )}
-                  </button>
-                  <button className="sr-overlay-close" onClick={close} aria-label="Close">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M18 6 6 18M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div className="sr-overlay-body sl-body" style={{ fontSize: `${fontSize}px` }}>
-              {loading ? <span className="sl-loading">Loading…</span> : content}
-            </div>
-          </div>
-        </div>
+        <SermonOverlay
+          sermon={selected}
+          user={user}
+          bookmarkMap={bookmarkMap}
+          onBookmark={onBookmark}
+          onClose={() => setSelected(null)}
+        />
       )}
     </div>
   )

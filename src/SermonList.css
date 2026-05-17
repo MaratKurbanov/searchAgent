@@ -204,7 +204,6 @@
 
 .sl-clear-all {
   color: var(--text-secondary);
-  margin-left: auto;
 }
 
 .sl-clear-all:hover {
@@ -229,6 +228,36 @@
   padding: 12px;
   width: 420px;
   max-width: 90vw;
+}
+
+/* Topic search — desktop only */
+.sl-topic-search {
+  display: none;
+  margin-bottom: 10px;
+}
+
+@media (min-width: 769px) {
+  .sl-topic-search {
+    display: block;
+  }
+}
+
+.sl-topic-search-input {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-color);
+  color: var(--text-color);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+}
+
+.sl-topic-search-input:focus {
+  border-color: var(--accent-color);
 }
 
 .sl-topic-grid {
@@ -354,4 +383,8 @@
 .sl-bookmark-btn.active {
   color: var(--accent-color);
   background: var(--slider-bg);
+}
+
+.sl-bookmark-btn--overlay {
+  opacity: 1;
 }

@@ -148,6 +148,14 @@
   padding-top: 5px;
 }
 
+.bv-item-content--clickable {
+  cursor: pointer;
+}
+
+.bv-item-content--clickable:hover .bv-title {
+  color: var(--accent-color);
+}
+
 .bv-title {
   font-size: 14px;
   font-weight: 500;
