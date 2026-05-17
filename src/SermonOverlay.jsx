@@ -52,6 +52,9 @@ export default function SermonOverlay({ sermon, user, bookmarkMap = new Map(), o
                 rel="noopener noreferrer"
                 onClick={e => e.stopPropagation()}
               >
+                {/^https:\/\/gospelinlife\.com\/sermon\//.test(sermon.url) && (
+                  <span className="sr-overlay-audio-icon" title="Audio sermon" aria-label="Audio sermon">🔊 </span>
+                )}
                 {sermon.url}
               </a>
             )}
