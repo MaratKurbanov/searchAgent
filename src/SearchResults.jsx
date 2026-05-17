@@ -191,6 +191,9 @@ export default function SearchResults({ apiUrl, user, bookmarkMap, onBookmark })
                     rel="noopener noreferrer"
                     onClick={e => e.stopPropagation()}
                   >
+                    {/^https:\/\/gospelinlife\.com\/sermon\//.test(selected.url) && (
+                      <span className="sr-overlay-audio-icon" title="Audio sermon" aria-label="Audio sermon">🔊 </span>
+                    )}
                     {selected.url}
                   </a>
                 )}
