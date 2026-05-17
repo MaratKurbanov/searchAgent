@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import './SearchResults.css'
 
 function parseChunk(chunk) {
@@ -177,7 +178,7 @@ export default function SearchResults({ apiUrl, user, bookmarkMap, onBookmark })
         </div>
       )}
 
-      {selected && (
+      {selected && createPortal(
         <div className={`sr-overlay${fullscreen ? ' sr-overlay--fullscreen' : ''}`} onClick={() => { setSelected(null); setFullscreen(false) }}>
           <div className={`sr-overlay-panel${fullscreen ? ' fullscreen' : ''}`} onClick={e => e.stopPropagation()}>
             <div className="sr-overlay-header">
@@ -250,7 +251,8 @@ export default function SearchResults({ apiUrl, user, bookmarkMap, onBookmark })
             </div>
             <div className="sr-overlay-body">{highlightOn ? highlight(selected.body, searchedQuery, exactMatch) : selected.body}</div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )
