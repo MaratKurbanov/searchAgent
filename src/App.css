@@ -148,8 +148,7 @@
   padding: 20px;
   padding-top: 20px;
   width: 100%;
-  overflow: auto;
-  -webkit-overflow-scrolling: touch;
+  overflow: hidden;
   position: relative;
   gap: 12px;
 }
@@ -338,7 +337,7 @@
 .admin-wrapper {
   width: 80%;
   max-width: 1200px;
-  height: calc(100dvh - 160px);
+  flex: 1;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -357,7 +356,7 @@
 .chat-wrapper {
   width: 80%;
   max-width: 1200px;
-  height: calc(100dvh - 160px);
+  flex: 1;
   display: flex;
   flex-direction: column;
   border-radius: 12px;
@@ -368,7 +367,7 @@
 .read-wrapper {
   width: 80%;
   max-width: 1200px;
-  height: calc(100dvh - 160px);
+  flex: 1;
   display: flex;
   flex-direction: column;
   overflow: hidden;
