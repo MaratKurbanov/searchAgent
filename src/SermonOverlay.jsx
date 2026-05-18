@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import NoteEditor, { NoteIcon } from './NoteEditor'
 import './SermonList.css'
 
@@ -26,6 +26,9 @@ export default function SermonOverlay({
   const [fullscreen, setFullscreen] = useState(false)
   const [fontSize, setFontSize] = useState(15)
   const [noteOpen, setNoteOpen] = useState(false)
+  const [splitRatio, setSplitRatio] = useState(50)
+  const panelRef = useRef(null)
+  const dragStart = useRef(null)
   const [readerDark, setReaderDark] = useState(() => {
     try { return localStorage.getItem('readerDark') === '1' } catch { return false }
   })
@@ -55,6 +58,27 @@ export default function SermonOverlay({
     })
   }
 
+  function onDividerMouseDown(e) {
+    e.preventDefault()
+    const panelRect = panelRef.current.getBoundingClientRect()
+    dragStart.current = { startX: e.clientX, startRatio: splitRatio, panelWidth: panelRect.width }
+
+    function onMouseMove(ev) {
+      const { startX, startRatio, panelWidth } = dragStart.current
+      const deltaPercent = ((ev.clientX - startX) / panelWidth) * 100
+      setSplitRatio(Math.max(30, Math.min(70, startRatio + deltaPercent)))
+    }
+
+    function onMouseUp() {
+      document.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('mouseup', onMouseUp)
+      dragStart.current = null
+    }
+
+    document.addEventListener('mousemove', onMouseMove)
+    document.addEventListener('mouseup', onMouseUp)
+  }
+
   const panelClasses = [
     'sr-overlay-panel sl-panel',
     fullscreen ? 'fullscreen' : '',
@@ -64,10 +88,13 @@ export default function SermonOverlay({
 
   return (
     <div className={`sr-overlay${fullscreen ? ' sr-overlay--fullscreen' : ''}`} onClick={onClose}>
-      <div className={panelClasses} onClick={e => e.stopPropagation()}>
+      <div className={panelClasses} ref={panelRef} onClick={e => e.stopPropagation()}>
 
         {/* Sermon column */}
-        <div className={noteOpen ? 'sr-sermon-half' : undefined}>
+        <div
+          className="sr-sermon-half"
+          style={noteOpen ? { flex: `0 0 ${splitRatio}%` } : undefined}
+        >
           <div className="sr-overlay-header">
             <div className="sl-overlay-meta">
               <h2 className="sr-overlay-title">{sermon.title}</h2>
@@ -179,6 +206,9 @@ export default function SermonOverlay({
             {loading ? <span className="sl-loading">Loading…</span> : content}
           </div>
         </div>
+
+        {/* Draggable divider */}
+        {noteOpen && <div className="sr-split-divider" onMouseDown={onDividerMouseDown} />}
 
         {/* Note editor */}
         {noteOpen && (
