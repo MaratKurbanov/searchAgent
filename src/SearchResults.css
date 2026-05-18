@@ -393,3 +393,69 @@
     padding: 16px;
   }
 }
+
+/* Split-screen layout when note is open (desktop only) */
+@media (min-width: 769px) {
+  .sr-overlay-panel--split {
+    max-width: 95vw !important;
+    width: 95vw !important;
+    flex-direction: row !important;
+    overflow: hidden;
+  }
+}
+
+/* Sermon half in split mode */
+.sr-sermon-half {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+@media (min-width: 769px) {
+  .sr-sermon-half {
+    border-right: 1px solid var(--border-color);
+  }
+}
+
+/* Reader dark mode — scoped CSS variable overrides */
+.sr-overlay-panel.reader-dark {
+  --bg-color: #1a1b2e;
+  --panel-bg: #252638;
+  --text-color: #d4d8f0;
+  --text-secondary: #7880a0;
+  --border-color: #363750;
+  --slider-bg: rgba(255,255,255,0.06);
+}
+
+/* Night mode button active state */
+.sr-overlay-close.active {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.4);
+  color: #818cf8;
+}
+
+/* Note button in overlay header */
+.sl-note-btn {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  padding: 0;
+}
+
+.sl-note-btn:hover,
+.sl-note-btn.active {
+  color: var(--accent-color);
+  border-color: var(--accent-color);
+  background: rgba(59, 130, 246, 0.08);
+}

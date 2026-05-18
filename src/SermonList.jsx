@@ -1,14 +1,15 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import SermonOverlay, { BookmarkIcon } from './SermonOverlay'
+import { NoteIcon } from './NoteEditor'
 import './SermonList.css'
 
-export default function SermonList({ user, bookmarkMap = new Map(), onBookmark }) {
+export default function SermonList({ user, bookmarkMap = new Map(), onBookmark, noteMap = new Map(), onSaveNote, onDeleteNote }) {
   const [sermons, setSermons] = useState([])
   const [filter, setFilter] = useState('')
   const [selected, setSelected] = useState(null)
 
   // Sort & filter state
-  const [sortBy, setSortBy] = useState('default')        // 'default' | 'bookmarked'
+  const [sortBy, setSortBy] = useState('default')        // 'default' | 'bookmarked' | 'noted'
   const [selectedTopics, setSelectedTopics] = useState(new Set())
   const [topicPanelOpen, setTopicPanelOpen] = useState(false)
   const [topicSearch, setTopicSearch] = useState('')
@@ -81,10 +82,16 @@ export default function SermonList({ user, bookmarkMap = new Map(), onBookmark }
         const bHas = bookmarkMap.has(b.file) ? 1 : 0
         return bHas - aHas
       })
+    } else if (sortBy === 'noted') {
+      items = [...items].sort((a, b) => {
+        const aHas = noteMap.has(a.file) ? 1 : 0
+        const bHas = noteMap.has(b.file) ? 1 : 0
+        return bHas - aHas
+      })
     }
 
     return items
-  }, [sermons, filter, selectedTopics, sortBy, bookmarkMap])
+  }, [sermons, filter, selectedTopics, sortBy, bookmarkMap, noteMap])
 
   return (
     <div className="sl-root">
@@ -170,6 +177,15 @@ export default function SermonList({ user, bookmarkMap = new Map(), onBookmark }
           Bookmarked first
         </button>
 
+        <button
+          className={`sl-ctrl-btn${sortBy === 'noted' ? ' active' : ''}`}
+          onClick={() => setSortBy(s => s === 'noted' ? 'default' : 'noted')}
+          title={sortBy === 'noted' ? 'Remove notes sort' : 'Sort sermons with notes first'}
+        >
+          <NoteIcon hasNote={sortBy === 'noted'} />
+          Notes first
+        </button>
+
         {hasActiveFilters && (
           <button className="sl-ctrl-btn sl-clear-all" onClick={clearFilters}>
             Clear all
@@ -198,6 +214,7 @@ export default function SermonList({ user, bookmarkMap = new Map(), onBookmark }
       <div className="sl-list">
         {filtered.map(s => {
           const bookmarked = bookmarkMap.has(s.file)
+          const hasNote = noteMap.has(s.file)
           return (
             <div
               key={s.file}
@@ -212,14 +229,24 @@ export default function SermonList({ user, bookmarkMap = new Map(), onBookmark }
                 {s.scripture && <span className="sl-card-scripture">{s.scripture}</span>}
               </div>
               {user && (
-                <button
-                  className={`sl-bookmark-btn${bookmarked ? ' active' : ''}`}
-                  onClick={e => { e.stopPropagation(); onBookmark?.(s.file, s.title, s.url) }}
-                  aria-label={bookmarked ? 'Remove bookmark' : 'Bookmark sermon'}
-                  title={bookmarked ? 'Remove bookmark' : 'Add bookmark'}
-                >
-                  <BookmarkIcon filled={bookmarked} />
-                </button>
+                <div className="sl-card-actions">
+                  <button
+                    className={`sl-note-btn${hasNote ? ' active' : ''}`}
+                    onClick={e => { e.stopPropagation(); setSelected(s) }}
+                    aria-label={hasNote ? 'View note' : 'Add note'}
+                    title={hasNote ? 'View note' : 'Add note'}
+                  >
+                    <NoteIcon hasNote={hasNote} />
+                  </button>
+                  <button
+                    className={`sl-bookmark-btn${bookmarked ? ' active' : ''}`}
+                    onClick={e => { e.stopPropagation(); onBookmark?.(s.file, s.title, s.url) }}
+                    aria-label={bookmarked ? 'Remove bookmark' : 'Bookmark sermon'}
+                    title={bookmarked ? 'Remove bookmark' : 'Add bookmark'}
+                  >
+                    <BookmarkIcon filled={bookmarked} />
+                  </button>
+                </div>
               )}
             </div>
           )
@@ -233,6 +260,9 @@ export default function SermonList({ user, bookmarkMap = new Map(), onBookmark }
           bookmarkMap={bookmarkMap}
           onBookmark={onBookmark}
           onClose={() => setSelected(null)}
+          noteMap={noteMap}
+          onSaveNote={onSaveNote}
+          onDeleteNote={onDeleteNote}
         />
       )}
     </div>

@@ -16,10 +16,15 @@
     "worker:deploy:keller": "wrangler deploy --env keller",
     "db:migrate": "wrangler d1 execute search-agent-bookmarks --file migrations/0001_initial.sql --remote",
     "db:migrate:local": "wrangler d1 execute search-agent-bookmarks --env hadis --file migrations/0001_initial.sql --local",
+    "db:migrate2": "wrangler d1 execute search-agent-bookmarks --file migrations/0002_notes.sql --remote",
+    "db:migrate2:local": "wrangler d1 execute search-agent-bookmarks --env hadis --file migrations/0002_notes.sql --local",
     "postinstall": "patch-package"
   },
   "dependencies": {
     "@cloudflare/ai-search-snippet": "^0.0.30",
+    "@tiptap/pm": "^3.23.4",
+    "@tiptap/react": "^3.23.4",
+    "@tiptap/starter-kit": "^3.23.4",
     "@vitejs/plugin-react": "^4.7.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",

@@ -26,10 +26,16 @@ export default function App() {
   const [user, setUser] = useState(null)
   const [userLoading, setUserLoading] = useState(true)
   const [bookmarks, setBookmarks] = useState([])
+  const [notes, setNotes] = useState([])
 
   const bookmarkMap = useMemo(
     () => new Map(bookmarks.map(b => [b.sermon_file, b])),
     [bookmarks]
+  )
+
+  const noteMap = useMemo(
+    () => new Map(notes.map(n => [n.sermon_slug, n])),
+    [notes]
   )
 
   useEffect(() => {
@@ -46,6 +52,8 @@ export default function App() {
       localStorage.setItem(SIGNED_IN_KEY, '1')
       const bmRes = await fetch('/api/bookmarks')
       if (bmRes.ok) setBookmarks(await bmRes.json())
+      const noteRes = await fetch('/api/notes')
+      if (noteRes.ok) setNotes(await noteRes.json())
     } catch {
       localStorage.removeItem(SIGNED_IN_KEY)
     } finally {
@@ -89,6 +97,28 @@ export default function App() {
   async function clearRead() {
     await fetch('/api/bookmarks/clear-read', { method: 'POST' })
     setBookmarks(prev => prev.filter(b => !b.is_read))
+  }
+
+  async function saveNote(sermon_slug, sermon_title, content) {
+    const res = await fetch(`/api/notes/${encodeURIComponent(sermon_slug)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content, sermon_title }),
+    })
+    if (res.ok) {
+      const note = await res.json()
+      setNotes(prev => {
+        const exists = prev.find(n => n.sermon_slug === sermon_slug)
+        return exists
+          ? prev.map(n => n.sermon_slug === sermon_slug ? { ...n, ...note } : n)
+          : [note, ...prev]
+      })
+    }
+  }
+
+  async function deleteNote(sermon_slug) {
+    await fetch(`/api/notes/${encodeURIComponent(sermon_slug)}`, { method: 'DELETE' })
+    setNotes(prev => prev.filter(n => n.sermon_slug !== sermon_slug))
   }
 
   return (
@@ -185,6 +215,9 @@ export default function App() {
             user={user}
             bookmarkMap={bookmarkMap}
             onBookmark={toggleBookmark}
+            noteMap={noteMap}
+            onSaveNote={saveNote}
+            onDeleteNote={deleteNote}
           />
         </div>
 
@@ -200,6 +233,9 @@ export default function App() {
             user={user}
             bookmarkMap={bookmarkMap}
             onBookmark={toggleBookmark}
+            noteMap={noteMap}
+            onSaveNote={saveNote}
+            onDeleteNote={deleteNote}
           />
         </div>
 

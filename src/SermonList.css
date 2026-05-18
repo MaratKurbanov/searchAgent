@@ -357,6 +357,14 @@
   margin-top: -2px;
 }
 
+.sl-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.sl-note-btn,
 .sl-bookmark-btn {
   flex-shrink: 0;
   width: 30px;
@@ -371,12 +379,12 @@
   justify-content: center;
   transition: all 0.15s;
   padding: 0;
-  opacity: 0;
 }
 
-.sl-card:hover .sl-bookmark-btn,
-.sl-bookmark-btn.active {
-  opacity: 1;
+.sl-note-btn:hover,
+.sl-note-btn.active {
+  color: var(--accent-color);
+  background: var(--slider-bg);
 }
 
 .sl-bookmark-btn:hover,

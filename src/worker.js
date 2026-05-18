@@ -136,6 +136,61 @@ export default {
       }
     }
 
+    // ── Notes API ─────────────────────────────────────────────────────────────
+
+    if (pathname === '/api/notes') {
+      if (!env.DB) return jsonResp({ error: 'Database not configured' }, 503)
+      const email = getUserEmail(request, isLocalhost)
+      await ensureUser(env.DB, email)
+
+      if (request.method === 'GET') {
+        const { results } = await env.DB.prepare(
+          'SELECT sermon_slug, sermon_title, updated_at FROM notes WHERE user_email = ? ORDER BY updated_at DESC'
+        ).bind(email).all()
+        return jsonResp(results)
+      }
+    }
+
+    const noteMatch = pathname.match(/^\/api\/notes\/([^/]+)$/)
+    if (noteMatch) {
+      if (!env.DB) return jsonResp({ error: 'Database not configured' }, 503)
+      const email = getUserEmail(request, isLocalhost)
+      await ensureUser(env.DB, email)
+      const slug = decodeURIComponent(noteMatch[1])
+
+      if (request.method === 'GET') {
+        const note = await env.DB.prepare(
+          'SELECT * FROM notes WHERE user_email = ? AND sermon_slug = ?'
+        ).bind(email, slug).first()
+        if (!note) return jsonResp(null, 404)
+        return jsonResp(note)
+      }
+
+      if (request.method === 'PUT') {
+        const { content, sermon_title } = await request.json()
+        const now = Math.floor(Date.now() / 1000)
+        await env.DB.prepare(
+          `INSERT INTO notes (user_email, sermon_slug, sermon_title, content, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?)
+           ON CONFLICT(user_email, sermon_slug) DO UPDATE SET
+             content = excluded.content,
+             sermon_title = excluded.sermon_title,
+             updated_at = excluded.updated_at`
+        ).bind(email, slug, sermon_title, content, now, now).run()
+        const note = await env.DB.prepare(
+          'SELECT sermon_slug, sermon_title, updated_at FROM notes WHERE user_email = ? AND sermon_slug = ?'
+        ).bind(email, slug).first()
+        return jsonResp(note)
+      }
+
+      if (request.method === 'DELETE') {
+        await env.DB.prepare(
+          'DELETE FROM notes WHERE user_email = ? AND sermon_slug = ?'
+        ).bind(email, slug).run()
+        return jsonResp({ success: true })
+      }
+    }
+
     // ── Admin APIs ────────────────────────────────────────────────────────────
 
     if (pathname.startsWith('/api/admin/')) {
