@@ -53,7 +53,7 @@ export default function SermonOverlay({
   function toggleDark() {
     setReaderDark(d => {
       const next = !d
-      try { localStorage.setItem('readerDark', next ? '1' : '0') } catch {}
+      try { localStorage.setItem('readerDark', next ? '1' : '0') } catch (_) { /* ignore */ }
       return next
     })
   }
@@ -107,10 +107,12 @@ export default function SermonOverlay({
                   rel="noopener noreferrer"
                   onClick={e => e.stopPropagation()}
                 >
-                  {/^https:\/\/gospelinlife\.com\/sermon\//.test(sermon.url) && (
-                    <span className="sr-overlay-audio-icon" title="Audio sermon" aria-label="Audio sermon">🔊 </span>
-                  )}
-                  {sermon.url}
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true" style={{flexShrink:0}}>
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                    <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+                  </svg>
+                  Listen
                 </a>
               )}
             </div>

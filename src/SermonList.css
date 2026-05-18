@@ -112,6 +112,12 @@
   min-width: 0;
 }
 
+@media (max-width: 600px) {
+  .sl-overlay-meta {
+    flex: 0 0 auto;
+  }
+}
+
 .sl-body {
   font-size: 15px;
   line-height: 1.8;
@@ -356,6 +362,20 @@
   font-size: 13px;
   color: var(--text-secondary);
   margin-top: -2px;
+}
+
+.sr-overlay-url {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  color: var(--accent-color, #4a90e2);
+  text-decoration: none;
+  width: fit-content;
+}
+
+.sr-overlay-url:hover {
+  text-decoration: underline;
 }
 
 .sl-card-actions {
