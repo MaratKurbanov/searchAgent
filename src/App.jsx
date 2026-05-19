@@ -119,6 +119,26 @@ export default function App() {
     setNotes(prev => prev.filter(n => n.sermon_slug !== sermon_slug))
   }
 
+  async function saveNoteColor(sermon_slug, sermon_title, color) {
+    const res = await fetch(`/api/notes/${encodeURIComponent(sermon_slug)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ color, sermon_title }),
+    })
+    if (res.ok) {
+      const note = await res.json()
+      setNotes(prev => {
+        if (!note?.color && !note?.has_content) {
+          return prev.filter(n => n.sermon_slug !== sermon_slug)
+        }
+        const exists = prev.find(n => n.sermon_slug === sermon_slug)
+        return exists
+          ? prev.map(n => n.sermon_slug === sermon_slug ? { ...n, ...note } : n)
+          : [note, ...prev]
+      })
+    }
+  }
+
   return (
     <div className="app-container">
       <main className="main-content">
@@ -203,6 +223,7 @@ export default function App() {
             noteMap={noteMap}
             onSaveNote={saveNote}
             onDeleteNote={deleteNote}
+            onSaveColor={saveNoteColor}
           />
         </div>
 

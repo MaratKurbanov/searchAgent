@@ -145,7 +145,9 @@ export default {
 
       if (request.method === 'GET') {
         const { results } = await env.DB.prepare(
-          'SELECT sermon_slug, sermon_title, updated_at FROM notes WHERE user_email = ? ORDER BY updated_at DESC'
+          `SELECT sermon_slug, sermon_title, updated_at, color,
+           (CASE WHEN content != '' THEN 1 ELSE 0 END) AS has_content
+           FROM notes WHERE user_email = ? ORDER BY updated_at DESC`
         ).bind(email).all()
         return jsonResp(results)
       }
@@ -178,9 +180,34 @@ export default {
              updated_at = excluded.updated_at`
         ).bind(email, slug, sermon_title, content, now, now).run()
         const note = await env.DB.prepare(
-          'SELECT sermon_slug, sermon_title, updated_at FROM notes WHERE user_email = ? AND sermon_slug = ?'
+          `SELECT sermon_slug, sermon_title, updated_at, color,
+           (CASE WHEN content != '' THEN 1 ELSE 0 END) AS has_content
+           FROM notes WHERE user_email = ? AND sermon_slug = ?`
         ).bind(email, slug).first()
         return jsonResp(note)
+      }
+
+      if (request.method === 'PATCH') {
+        const { color, sermon_title } = await request.json()
+        const now = Math.floor(Date.now() / 1000)
+        await env.DB.prepare(
+          `INSERT INTO notes (user_email, sermon_slug, sermon_title, content, color, created_at, updated_at)
+           VALUES (?, ?, ?, '', ?, ?, ?)
+           ON CONFLICT(user_email, sermon_slug) DO UPDATE SET
+             color = excluded.color,
+             updated_at = excluded.updated_at`
+        ).bind(email, slug, sermon_title || '', color || null, now, now).run()
+        if (!color) {
+          await env.DB.prepare(
+            `DELETE FROM notes WHERE user_email = ? AND sermon_slug = ? AND (content = '' OR content IS NULL)`
+          ).bind(email, slug).run()
+        }
+        const note = await env.DB.prepare(
+          `SELECT sermon_slug, sermon_title, updated_at, color,
+           (CASE WHEN content != '' THEN 1 ELSE 0 END) AS has_content
+           FROM notes WHERE user_email = ? AND sermon_slug = ?`
+        ).bind(email, slug).first()
+        return jsonResp(note || { sermon_slug: slug, color: null, has_content: 0 })
       }
 
       if (request.method === 'DELETE') {

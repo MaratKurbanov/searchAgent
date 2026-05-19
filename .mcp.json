@@ -7,6 +7,10 @@
     "keller": {
       "type": "sse",
       "url": "https://39aacfde-5cd3-47e4-91f4-8a1295082da4.search.ai.cloudflare.com/mcp"
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest", "--output-dir", ".playwright-mcp"]
     }
   }
 }

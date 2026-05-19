@@ -1,15 +1,33 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import SermonOverlay from './SermonOverlay'
 import { NoteIcon } from './NoteEditor'
 import './BookmarksView.css'
 
+const COLORS = [
+  { key: 'red', label: 'Red' },
+  { key: 'orange', label: 'Orange' },
+  { key: 'yellow', label: 'Yellow' },
+  { key: 'green', label: 'Green' },
+  { key: 'blue', label: 'Blue' },
+]
+
 export default function BookmarksView({
   bookmarks, onToggleRead, onRemove, onClearRead,
   user, bookmarkMap, onBookmark,
-  noteMap = new Map(), onSaveNote, onDeleteNote,
+  noteMap = new Map(), onSaveNote, onDeleteNote, onSaveColor,
 }) {
   const [section, setSection] = useState('toread')
   const [overlaySermon, setOverlaySermon] = useState(null)
+  const [pickerOpenId, setPickerOpenId] = useState(null)
+
+  useEffect(() => {
+    if (!pickerOpenId) return
+    function handleClick(e) {
+      if (!e.target.closest('.bv-color-picker')) setPickerOpenId(null)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [pickerOpenId])
 
   const toRead = bookmarks.filter(b => !b.is_read)
   const read = bookmarks.filter(b => b.is_read)
@@ -26,6 +44,11 @@ export default function BookmarksView({
     if (b.sermon_file) {
       setOverlaySermon({ file: b.sermon_file, title: b.sermon_title, url: b.sermon_url })
     }
+  }
+
+  function handleColorSelect(b, colorKey) {
+    setPickerOpenId(null)
+    onSaveColor?.(b.sermon_file, b.sermon_title, colorKey)
   }
 
   return (
@@ -61,9 +84,15 @@ export default function BookmarksView({
           </div>
         ) : (
           current.map(b => {
-            const hasNote = noteMap.has(b.sermon_file)
+            const note = noteMap.get(b.sermon_file)
+            const hasNote = note?.has_content === 1
+            const noteColor = note?.color || null
+            const isPickerOpen = pickerOpenId === b.id
             return (
-              <div key={b.id} className={`bv-item${b.is_read ? ' bv-item--read' : ''}`}>
+              <div
+                key={b.id}
+                className={`bv-item${b.is_read ? ' bv-item--read' : ''}${noteColor ? ` bv-item--${noteColor}` : ''}`}
+              >
                 <button
                   className={`bv-check${b.is_read ? ' bv-check--done' : ''}`}
                   onClick={() => onToggleRead(b.id)}
@@ -98,6 +127,34 @@ export default function BookmarksView({
                 >
                   <NoteIcon hasNote={hasNote} />
                 </button>
+
+                <div className="bv-color-picker">
+                  <button
+                    className={`bv-color-trigger${noteColor ? ` bv-color-trigger--${noteColor}` : ''}`}
+                    onClick={e => { e.stopPropagation(); setPickerOpenId(isPickerOpen ? null : b.id) }}
+                    title="Set color"
+                    aria-label="Set item color"
+                  />
+                  {isPickerOpen && (
+                    <div className="bv-color-swatches">
+                      {COLORS.map(c => (
+                        <button
+                          key={c.key}
+                          className={`bv-swatch bv-swatch--${c.key}${noteColor === c.key ? ' active' : ''}`}
+                          onClick={e => { e.stopPropagation(); handleColorSelect(b, noteColor === c.key ? null : c.key) }}
+                          title={c.label}
+                        />
+                      ))}
+                      {noteColor && (
+                        <button
+                          className="bv-swatch-none"
+                          onClick={e => { e.stopPropagation(); handleColorSelect(b, null) }}
+                          title="Clear color"
+                        >✕</button>
+                      )}
+                    </div>
+                  )}
+                </div>
 
                 <button
                   className="bv-remove"

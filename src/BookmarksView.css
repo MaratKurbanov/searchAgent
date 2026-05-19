@@ -1,3 +1,37 @@
+:root {
+  --bv-red-bg: #fef2f2;
+  --bv-red-border: #fca5a5;
+  --bv-orange-bg: #fff7ed;
+  --bv-orange-border: #fed7aa;
+  --bv-yellow-bg: #fefce8;
+  --bv-yellow-border: #fde68a;
+  --bv-green-bg: #f0fdf4;
+  --bv-green-border: #bbf7d0;
+  --bv-blue-bg: #eff6ff;
+  --bv-blue-border: #bfdbfe;
+  --swatch-red: #ef4444;
+  --swatch-orange: #f97316;
+  --swatch-yellow: #ca8a04;
+  --swatch-green: #16a34a;
+  --swatch-blue: #3b82f6;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bv-red-bg: rgba(127, 29, 29, 0.28);
+    --bv-red-border: #991b1b;
+    --bv-orange-bg: rgba(124, 45, 18, 0.28);
+    --bv-orange-border: #9a3412;
+    --bv-yellow-bg: rgba(113, 63, 18, 0.28);
+    --bv-yellow-border: #92400e;
+    --bv-green-bg: rgba(20, 83, 45, 0.28);
+    --bv-green-border: #166534;
+    --bv-blue-bg: rgba(30, 58, 138, 0.28);
+    --bv-blue-border: #1e40af;
+    --swatch-yellow: #eab308;
+  }
+}
+
 .bv-root {
   display: flex;
   flex-direction: column;
@@ -103,7 +137,7 @@
   border: 1px solid var(--border-color);
   border-radius: 8px;
   background: var(--panel-bg);
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, background 0.15s;
 }
 
 .bv-item:hover {
@@ -113,6 +147,12 @@
 .bv-item--read {
   opacity: 0.65;
 }
+
+.bv-item--red { background: var(--bv-red-bg); border-color: var(--bv-red-border); }
+.bv-item--orange { background: var(--bv-orange-bg); border-color: var(--bv-orange-border); }
+.bv-item--yellow { background: var(--bv-yellow-bg); border-color: var(--bv-yellow-border); }
+.bv-item--green { background: var(--bv-green-bg); border-color: var(--bv-green-border); }
+.bv-item--blue { background: var(--bv-blue-bg); border-color: var(--bv-blue-border); }
 
 .bv-check {
   flex-shrink: 0;
@@ -239,3 +279,98 @@
   color: #ef4444;
   background: var(--slider-bg);
 }
+
+/* ── Color picker ──────────────────────────────────────────────────────────── */
+
+.bv-color-picker {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.bv-color-trigger {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+  padding: 0;
+}
+
+.bv-color-trigger::after {
+  content: '';
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: block;
+  border: 1.5px dashed var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.bv-color-trigger:hover {
+  background: var(--slider-bg);
+}
+
+.bv-color-trigger--red::after { background: var(--swatch-red); border: none; box-shadow: 0 0 0 1.5px rgba(0,0,0,0.12); }
+.bv-color-trigger--orange::after { background: var(--swatch-orange); border: none; box-shadow: 0 0 0 1.5px rgba(0,0,0,0.12); }
+.bv-color-trigger--yellow::after { background: var(--swatch-yellow); border: none; box-shadow: 0 0 0 1.5px rgba(0,0,0,0.12); }
+.bv-color-trigger--green::after { background: var(--swatch-green); border: none; box-shadow: 0 0 0 1.5px rgba(0,0,0,0.12); }
+.bv-color-trigger--blue::after { background: var(--swatch-blue); border: none; box-shadow: 0 0 0 1.5px rgba(0,0,0,0.12); }
+
+.bv-color-swatches {
+  position: absolute;
+  right: 0;
+  top: 32px;
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 6px 8px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  white-space: nowrap;
+}
+
+.bv-swatch {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.1s, border-color 0.1s;
+  padding: 0;
+}
+
+.bv-swatch:hover { transform: scale(1.25); }
+.bv-swatch.active { border-color: var(--text-color); }
+
+.bv-swatch--red { background: var(--swatch-red); }
+.bv-swatch--orange { background: var(--swatch-orange); }
+.bv-swatch--yellow { background: var(--swatch-yellow); }
+.bv-swatch--green { background: var(--swatch-green); }
+.bv-swatch--blue { background: var(--swatch-blue); }
+
+.bv-swatch-none {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  padding: 0;
+  transition: transform 0.1s, color 0.1s;
+}
+
+.bv-swatch-none:hover { transform: scale(1.25); color: var(--text-color); }

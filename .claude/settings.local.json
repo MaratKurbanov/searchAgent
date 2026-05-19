@@ -88,12 +88,14 @@
       "Bash(grep -E \"\\\\.jsx$|\\\\.js$\")",
       "Bash(pkill -f \"vite build\")",
       "Read(//Users/maratkurbanov/.claude/**)",
-      "Bash(npx @playwright/mcp@latest --help)"
+      "Bash(npx @playwright/mcp@latest --help)",
+      "Bash(wrangler d1 *)"
     ]
   },
   "enabledMcpjsonServers": [
     "hadis",
-    "keller"
+    "keller",
+    "playwright"
   ],
   "hooks": {
     "PostToolUse": [
