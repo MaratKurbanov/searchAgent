@@ -467,8 +467,7 @@
   }
 
   .main-content {
-    /* padding-top clears the fixed settings-toggle (top:20px + height:44px + 8px gap) */
-    padding: 72px 0 0;
+    padding: 12px 0 0;
     flex: 1;
     width: 100%;
     overflow: hidden;
